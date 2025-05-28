@@ -39,6 +39,12 @@
     button:hover {
       background-color: #45a049;
     }
+    .register-button { /* New style for the register button */
+      background-color: #007bff; /* A different color for distinction */
+    }
+    .register-button:hover {
+      background-color: #0056b3;
+    }
     #recaptcha-container {
       margin: 15px 0;
       display: none;
@@ -48,7 +54,6 @@
 <body>
 <h2>Login</h2>
 
-<!-- Отображение сообщений об ошибках -->
 <div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></div>
 
 <form id="loginForm">
@@ -59,6 +64,7 @@
        data-sitekey="6Lcjd0ArAAAAAAL3X5sQAsNtBpjr14Bqumz4cAy4"></div>
 
   <button type="submit">Login</button>
+  <button type="button" class="register-button" onclick="window.location.href='/register'">Create Account</button>
 </form>
 
 <script th:inline="javascript">

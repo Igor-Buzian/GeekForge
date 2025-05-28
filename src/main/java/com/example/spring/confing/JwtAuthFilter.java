@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 
-// Добавляем импорт для логирования (для отладки)
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +33,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtTokenUtils jwtTokenUtils;
     private final UserService userService;
 
+    /**
+     * Extracts the JWT token from the "Auth_cookie" in the HTTP request's cookies.
+     *
+     * @param request The HttpServletRequest to extract the cookie from.
+     * @return The JWT token string if found, otherwise null.
+     */
     public String getToken(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
@@ -44,18 +50,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         return null;
     }
 
+    /**
+     * Performs the internal filtering logic for JWT authentication.
+     * @param request The HttpServletRequest being processed.
+     * @param response The HttpServletResponse being processed.
+     * @param filterChain The FilterChain to continue the request processing.
+     * @throws ServletException If a servlet-specific error occurs.
+     * @throws IOException If an I/O error occurs.
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String requestURI = request.getRequestURI();
-
-        // 1. Пропускаем фильтр для общедоступных путей, чтобы он не пытался проверять JWT там, где он не нужен.
-        // Это КРАЙНЕ ВАЖНО, так как запросы к /login не будут иметь токена изначально.
-        if (requestURI.startsWith("/login") || requestURI.startsWith("/register") || requestURI.startsWith("/auth/v1/")) {
-            logger.debug("Skipping JwtAuthFilter for public URI: {}", requestURI);
-            filterChain.doFilter(request, response);
-            return; // Завершаем выполнение фильтра для этих путей
-        }
-
         logger.debug("Processing JwtAuthFilter for protected URI: {}", requestURI);
 
         String token = getToken(request);
@@ -74,20 +79,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     logger.debug("Authentication set for user: {}", currentUserEmail);
                 } else {
                     logger.warn("Invalid JWT token for URI: {}", requestURI);
-                    // Токен невалиден, но фильтр продолжает работу, чтобы Spring Security
-                    // мог обработать это как неаутентифицированный запрос для защищенного ресурса.
+                    // Invalid token, but filter continues with Spring Security
                 }
             } catch (Exception e) {
-                // Логируем ошибку, связанную с обработкой токена (например, user not found, проблемы с JWT-ключом)
+                // Log errors related to token processing (e.g., user not found, JWT key issues)
                 logger.error("Error processing JWT token for URI {}: {}", requestURI, e.getMessage(), e);
-                // Важно: не бросать исключение, чтобы Spring Security мог обработать его самостоятельно,
-                // либо выдать 401/403 в зависимости от дальнейшей конфигурации.
             }
         } else {
             logger.debug("No JWT token found in cookies for URI: {}", requestURI);
         }
 
-        // Всегда вызываем filterChain.doFilter(), чтобы запрос пошел дальше по цепочке фильтров
         filterChain.doFilter(request, response);
     }
 }

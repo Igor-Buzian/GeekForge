@@ -45,6 +45,14 @@ public class AuthService {
         return  new ResponseEntity<>(headers, HttpStatus.SEE_OTHER);
     }
 
+    /**
+     *  gg wp
+     * @param jwtRequest hui
+     * @param request
+     * @param response
+     * @param captchaResponse
+     * @return
+     */
     public ResponseEntity<?> authUser(@RequestBody JwtRequest jwtRequest, HttpServletRequest request, HttpServletResponse response, @RequestParam(name = "g-recaptcha-response", required = false) String captchaResponse) {
 
         //if login not exist
@@ -113,7 +121,7 @@ public class AuthService {
     }
 
 
-    public ResponseEntity<?> getLoginAttempts( HttpServletRequest request)
+    public ResponseEntity<?> getLoginAttempts()
     {
         return ResponseEntity.ok(Map.of("attempts", loginAttemptsCountService.loginAttemptsCount++));
     }

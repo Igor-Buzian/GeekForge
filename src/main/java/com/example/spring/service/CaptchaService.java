@@ -9,6 +9,10 @@ import org.springframework.util.MultiValueMap;
 
 import java.util.Map;
 
+/**
+ * Service class for reCAPTCHA verification.
+ * This service communicates with the Google reCAPTCHA API to validate client responses.
+ */
 @Service
 public class CaptchaService {
 
@@ -19,17 +23,23 @@ public class CaptchaService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
+    /**
+     * Validates a reCAPTCHA response token by sending it to the Google reCAPTCHA API.
+     *
+     * @param responseToken The reCAPTCHA response token received from the client.
+     * @return true if the reCAPTCHA token is valid, false otherwise.
+     */
     public boolean isCaptchaValid(String responseToken) {
         if (responseToken == null || responseToken.isEmpty()) {
             return false;
         }
 
-        // Создаём параметры запроса
+        // Create request parameters
         MultiValueMap<String, String> requestData = new LinkedMultiValueMap<>();
         requestData.add("secret", recaptchaSecret);
         requestData.add("response", responseToken);
 
-        // Формируем HTTP-запрос
+        // Formulate HTTP request
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
@@ -44,7 +54,7 @@ public class CaptchaService {
             }
 
         } catch (Exception e) {
-            // логгируй ошибку при необходимости
+            // Log the error if necessary
             System.out.println("CAPTCHA verification failed: " + e.getMessage());
         }
 

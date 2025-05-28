@@ -10,17 +10,30 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/**
+ * Security configuration for the application.
+ */
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
 
+    /**
+     * Provides a BCryptPasswordEncoder bean for password hashing.
+     *
+     * @return A BCryptPasswordEncoder instance.
+     */
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * @param http The HttpSecurity object to configure.
+     * @return A SecurityFilterChain instance.
+     * @throws Exception If an error occurs during configuration.
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -34,13 +47,13 @@ public class SecurityConfig {
                                 "/register**",
                                 "/auth/v1/**"
                         ).permitAll()
-                        .requestMatchers("/success").hasRole("USER") // Требуем аутентификацию для /success
+                        .requestMatchers("/success").hasRole("USER") // Requires authentication for /success
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

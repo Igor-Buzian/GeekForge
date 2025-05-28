@@ -8,9 +8,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.Valid;
+
 
 @Controller
 @RequiredArgsConstructor
@@ -35,10 +39,10 @@ public class ViewController {
         return "login-form";
     }
     @GetMapping("/register")
-    public String register(Model model, @RequestParam(name = "error",required = false)String error)
+    public String register(Model model, RegisterDtoValues registerDtoValues,  @RequestParam(name = "error",required = false)String error)
     {
         // Добавляем пустой объект RegisterDtoValues в модель
-        model.addAttribute("registerDtoValues", new RegisterDtoValues());
+        model.addAttribute("registerDtoValues", registerDtoValues);
         if(error!=null)
         {
             String errorMessage = switch (error){

@@ -26,6 +26,10 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;
 
+/**
+ * Service class responsible for handling the creation of new user accounts.
+ * This includes validation, password encoding, role assignment, and JWT token generation.
+ */
 @Service
 @RequiredArgsConstructor
 public class CreateService {
@@ -36,13 +40,24 @@ public class CreateService {
     private  final JwtTokenUtils jwtTokenUtils;
     private  final LoginAttemptService loginAttemptService;
 
+    /**
+     * Creates a new user account based on the provided registration data.
+     * Performs checks for existing email, validates password confirmation, assigns a default role,
+     * generates a JWT token, and sets it as an HttpOnly cookie.
+     *
+     * @param registerDtoValues The DTO containing the new user's registration details.
+     * @param response The HttpServletResponse to add the JWT cookie to.
+     * @param request The HttpServletRequest to get client IP.
+     * @param captchaResponse The reCAPTCHA response from the client.
+     * @return A ResponseEntity indicating the result of the user creation, typically a redirect on success or an error.
+     */
     public ResponseEntity<?> createNewUser(RegisterDtoValues registerDtoValues, HttpServletResponse response, HttpServletRequest request, @RequestParam(name = "g-recaptcha-response", required = false) String captchaResponse){
 
         if(userRepository.existsByEmail(registerDtoValues.getEmail())){
             String ip = request.getRemoteAddr();
-           if(loginAttemptService.isBloked(ip)) return ResponseEntity.status(HttpStatus.FORBIDDEN).header("Location", "/register?error=ip_banned").build();
-           if(!loginAttemptService.validateCaptcha(ip, captchaResponse)) return ResponseEntity.status(HttpStatus.FORBIDDEN).header("Location", "/register?error=ip_banned").build();
-           return ResponseEntity.status(HttpStatus.FORBIDDEN).header("Location","/register?error=exist_mail").build();
+            if(loginAttemptService.isBloked(ip)) return ResponseEntity.status(HttpStatus.FORBIDDEN).header("Location", "/register?error=ip_banned").build();
+            if(!loginAttemptService.validateCaptcha(ip, captchaResponse)) return ResponseEntity.status(HttpStatus.FORBIDDEN).header("Location", "/register?error=ip_banned").build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).header("Location","/register?error=exist_mail").build();
         }
 
         User user = new User();
