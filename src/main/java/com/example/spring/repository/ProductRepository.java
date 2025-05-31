@@ -1,0 +1,14 @@
+package com.example.spring.repository;
+
+import com.example.spring.entity.Product;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface ProductRepository extends JpaRepository<Product, Long> {
+
+    Optional<Product> findByName(String Name);
+    List<Product> findByCategories_Name(String categoryName);
+    boolean existsByName(String name);
+}

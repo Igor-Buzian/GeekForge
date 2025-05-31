@@ -1,7 +1,7 @@
 package com.example.spring.confing;
 
 import com.example.spring.entity.User;
-import com.example.spring.service.UserService;
+import com.example.spring.service.RepositoryService;
 import com.example.spring.utils.JwtTokenUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -31,7 +31,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthFilter.class);
 
     private final JwtTokenUtils jwtTokenUtils;
-    private final UserService userService;
+    private final RepositoryService repositoryService;
 
     /**
      * Extracts the JWT token from the "Auth_cookie" in the HTTP request's cookies.
@@ -68,7 +68,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             try {
                 if (jwtTokenUtils.validateToken(token)) {
                     String currentUserEmail = jwtTokenUtils.getLogin(token);
-                    User user = userService.loadLogin(currentUserEmail);
+                    User user = repositoryService.loadLogin(currentUserEmail);
                     String roleName = jwtTokenUtils.getRoleFromToken(token).get(0);
 
                     UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(

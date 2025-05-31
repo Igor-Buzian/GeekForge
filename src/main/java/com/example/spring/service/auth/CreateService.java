@@ -1,13 +1,11 @@
-package com.example.spring.service;
+package com.example.spring.service.auth;
 
 import com.example.spring.dto.RegisterDtoValues;
 import com.example.spring.entity.Role;
 import com.example.spring.entity.User;
-import com.example.spring.exeption.InfoExeption;
 import com.example.spring.repository.RoleRepository;
 import com.example.spring.repository.UserRepository;
 import com.example.spring.utils.JwtTokenUtils;
-import io.jsonwebtoken.Header;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,11 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;

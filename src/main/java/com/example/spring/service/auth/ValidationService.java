@@ -1,6 +1,5 @@
-package com.example.spring.service;
+package com.example.spring.service.auth;
 
-import com.example.spring.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

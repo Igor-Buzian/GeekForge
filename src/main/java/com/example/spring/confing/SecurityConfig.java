@@ -47,7 +47,9 @@ public class SecurityConfig {
                                 "/register**",
                                 "/auth/v1/**"
                         ).permitAll()
-                        .requestMatchers("/success").hasRole("USER") // Requires authentication for /success
+                        //.requestMatchers("/success").hasRole("USER") // Requires authentication for /success
+                        .requestMatchers("product/v1/admin/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/admin/v1/**").hasAuthority("ROLE_ADMIN")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

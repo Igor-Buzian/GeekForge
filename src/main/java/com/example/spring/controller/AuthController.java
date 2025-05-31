@@ -2,8 +2,8 @@ package com.example.spring.controller;
 
 import com.example.spring.dto.JwtRequest;
 import com.example.spring.dto.RegisterDtoValues;
-import com.example.spring.service.AuthService;
-import com.example.spring.service.CreateService;
+import com.example.spring.service.auth.AuthService;
+import com.example.spring.service.auth.CreateService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

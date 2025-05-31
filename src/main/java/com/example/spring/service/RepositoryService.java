@@ -1,7 +1,10 @@
 package com.example.spring.service;
 
+import com.example.spring.entity.Category;
+import com.example.spring.entity.Product;
 import com.example.spring.entity.User;
-import com.example.spring.exeption.InfoExeption;
+import com.example.spring.repository.CategoryRepository;
+import com.example.spring.repository.ProductRepository;
 import com.example.spring.repository.RoleRepository;
 import com.example.spring.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,9 +17,11 @@ import org.springframework.stereotype.Service;
  */
 @RequiredArgsConstructor
 @Service
-public class UserService {
+public class RepositoryService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private  final CategoryRepository categoryRepository;
+    private  final ProductRepository productRepository;
 
     /**
      * Loads a user by their email address. This method is typically used by Spring Security
@@ -43,4 +48,15 @@ public class UserService {
                 .orElseThrow(() -> new UsernameNotFoundException("Role not found with name: " + roleName))
                 .getName();
     }
+
+    public Category loadCategoryByName(String name){
+        return  categoryRepository.findByName(name)
+                .orElseThrow(()-> new UsernameNotFoundException("Category not found with name: "+name));
+    }
+
+    public  Product loadProductByName(String name){
+        return  productRepository.findByName(name)
+                .orElseThrow(()-> new UsernameNotFoundException("Category not found with name: "+name));
+    }
+
 }

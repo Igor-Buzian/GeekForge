@@ -1,4 +1,4 @@
-package com.example.spring.service;
+package com.example.spring.service.auth;
 
 import com.example.spring.entity.User;
 import com.example.spring.repository.UserRepository;

@@ -1,19 +1,14 @@
 package com.example.spring.controller;
 
 import com.example.spring.dto.RegisterDtoValues;
-import com.example.spring.service.AccountSecurityService;
-import com.example.spring.service.LoginAttemptService;
+import com.example.spring.service.auth.AccountSecurityService;
+import com.example.spring.service.auth.LoginAttemptService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import javax.validation.Valid;
 
 
 @Controller

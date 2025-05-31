@@ -1,8 +1,9 @@
-package com.example.spring.service;
+package com.example.spring.service.auth;
 
 import com.example.spring.dto.JwtRequest;
 import com.example.spring.entity.User;
 import com.example.spring.repository.UserRepository;
+import com.example.spring.service.RepositoryService;
 import com.example.spring.utils.JwtTokenUtils;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +24,7 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-    private final UserService userService;
+    private final RepositoryService repositoryService;
     private final JwtTokenUtils jwtTokenUtils;
     private final PasswordEncoder passwordEncoder;
     private final  AccountSecurityService accountSecurityService;
@@ -69,7 +70,7 @@ public class AuthService {
             return ResponseEntity.status(HttpStatus.SEE_OTHER).header("Location","/login?error=incorrect&attempt="+attemptsLeft).build();
         }
 
-        User user = userService.loadLogin(jwtRequest.getEmail());
+        User user = repositoryService.loadLogin(jwtRequest.getEmail());
 
         if(!user.isEnabled()){
             //return new ResponseEntity<>(new InfoExeption(HttpStatus.FORBIDDEN.value(), "This account was Baned"),HttpStatus.FORBIDDEN);

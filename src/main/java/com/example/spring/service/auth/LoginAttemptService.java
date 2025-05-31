@@ -1,4 +1,4 @@
-package com.example.spring.service;
+package com.example.spring.service.auth;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
