@@ -3,6 +3,7 @@ package com.example.spring.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -42,5 +43,10 @@ public class AdminController {
     @GetMapping("/delete")
     public String delete(){
         return "/product-delete";
+    }
+
+    @GetMapping("/category")
+    public String createCategory(){
+        return "/category-management";
     }
 }

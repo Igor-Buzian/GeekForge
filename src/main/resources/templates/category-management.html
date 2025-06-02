@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Update Product - Admin Panel</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔄</text></svg>">
+  <title>Category Management - Admin Panel</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚙️</text></svg>">
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 
@@ -36,7 +36,7 @@
     }
     .form-section h2 {
       margin-bottom: 25px;
-      color: #ffc107; /* Orange for update section */
+      color: #007bff;
       font-weight: 600;
     }
     .response-area {
@@ -73,12 +73,6 @@
       text-align: center;
       margin-top: auto;
     }
-    .error-message {
-      color: #dc3545;
-      font-weight: bold;
-      margin-bottom: 15px;
-      text-align: center;
-    }
   </style>
 </head>
 <body>
@@ -93,10 +87,10 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item">
-            <a class="nav-link" href="/admin/v1/category">Categories</a>
+            <a class="nav-link active" aria-current="page" href="/admin/v1/category">Categories</a>
           </li>
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle active" aria-current="page" href="#" id="navbarDropdownProducts" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownProducts" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               Products
             </a>
             <ul class="dropdown-menu" aria-labelledby="navbarDropdownProducts">
@@ -104,8 +98,7 @@
               <li><a class="dropdown-item" href="/admin/v1/update">Update Product</a></li>
               <li><a class="dropdown-item" href="/admin/v1/delete">Delete Product</a></li>
               <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="/admin/v1/list-products">List Products</a></li>
-            </ul>
+              <li><a class="dropdown-item" href="/admin/v1/list-products">List Products</a></li> </ul>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="#">Users</a>
@@ -123,45 +116,48 @@
 
 <main class="main-content">
   <div class="container">
-    <h1 class="mb-5 text-center text-warning">Update Product</h1>
+    <h1 class="mb-5 text-center text-primary">Category Management</h1>
 
     <div class="form-section">
-      <h2 class="text-warning">Product Details for Update</h2>
-
-      <div th:if="${errorMessage}" class="error-message alert alert-danger" role="alert">
-        <p th:text="${errorMessage}"></p>
-      </div>
-
-      <form id="updateProductForm">
+      <h2 class="text-info">Create New Category</h2>
+      <form id="createCategoryForm">
         <div class="mb-3">
-          <label for="productName" class="form-label">Product Name (to find and update):</label>
-          <input type="text" class="form-control" id="productName" name="name" required placeholder="Enter existing product name">
-          <div class="form-text text-muted">Enter the exact name of the product you wish to update.</div>
+          <label for="createCategoryName" class="form-label">Category Name:</label>
+          <input type="text" class="form-control" id="createCategoryName" name="name" required placeholder="Enter category name">
         </div>
-        <div class="mb-3">
-          <label for="newDescription" class="form-label">New Description (optional):</label>
-          <textarea class="form-control" id="newDescription" name="description" rows="5" placeholder="Enter new description"></textarea>
-        </div>
-        <div class="mb-3">
-          <label for="newPrice" class="form-label">New Price (optional):</label>
-          <input type="number" class="form-control" id="newPrice" name="price" step="0.01" min="0" placeholder="Enter new price">
-        </div>
-        <div class="mb-3">
-          <label for="newQuantity" class="form-label">New Quantity (optional):</label>
-          <input type="number" class="form-control" id="newQuantity" name="quantity" min="0" placeholder="Enter new quantity">
-        </div>
-        <div class="mb-3">
-          <label for="newProductImage" class="form-label">New Image URL (optional):</label>
-          <input type="text" class="form-control" id="newProductImage" name="productImage" placeholder="Enter new image URL">
-        </div>
-        <div class="mb-3">
-          <label for="newCategoryNames" class="form-label">New Category Names (comma-separated, optional):</label>
-          <input type="text" class="form-control" id="newCategoryNames" name="categoryNames" placeholder="e.g., UpdatedCategory, AnotherOne">
-          <div class="form-text text-muted">Separate multiple category names with commas. If provided, these will replace existing categories.</div>
-        </div>
-        <button type="submit" class="btn btn-warning w-100">Update Product</button>
+        <button type="submit" class="btn btn-primary w-100">Create Category</button>
       </form>
-      <div id="updateProductResponse" class="response-area mt-3 d-none"></div>
+      <div id="createCategoryResponse" class="response-area mt-3 d-none"></div>
+    </div>
+
+    <div class="form-section">
+      <h2 class="text-info">Update Category</h2>
+      <form id="updateCategoryForm">
+        <div class="mb-3">
+          <label for="updateCategoryId" class="form-label">Category ID:</label>
+          <input type="number" class="form-control" id="updateCategoryId" name="id" required placeholder="Enter category ID">
+          <div class="form-text text-muted">Enter the ID of the category you want to update.</div>
+        </div>
+        <div class="mb-3">
+          <label for="updateCategoryName" class="form-label">New Category Name:</label>
+          <input type="text" class="form-control" id="updateCategoryName" name="name" required placeholder="Enter new name">
+        </div>
+        <button type="submit" class="btn btn-warning w-100">Update Category</button>
+      </form>
+      <div id="updateCategoryResponse" class="response-area mt-3 d-none"></div>
+    </div>
+
+    <div class="form-section">
+      <h2 class="text-info">Delete Category</h2>
+      <form id="deleteCategoryForm">
+        <div class="mb-3">
+          <label for="deleteCategoryName" class="form-label">Category Name to Delete:</label>
+          <input type="text" class="form-control" id="deleteCategoryName" name="name" required placeholder="Enter exact category name">
+          <div class="form-text text-muted">Enter the exact name of the category to delete.</div>
+        </div>
+        <button type="submit" class="btn btn-danger w-100">Delete Category</button>
+      </form>
+      <div id="deleteCategoryResponse" class="response-area mt-3 d-none"></div>
     </div>
   </div>
 </main>
@@ -178,6 +174,7 @@
 <script>
   /**
    * Helper function to display server response.
+   * Improved JSON/text handling and show/hide response area.
    * @param {string} elementId - ID of the DOM element to output the response.
    * @param {object} response - Response object containing ok, status, statusText, data.
    */
@@ -219,7 +216,7 @@
    */
   async function sendRequest(url, method, data, responseElementId) {
     const responseDiv = document.getElementById(responseElementId);
-    responseDiv.classList.add('d-none'); // Hide previous response
+    responseDiv.classList.add('d-none');
 
     const options = {
       method: method,
@@ -252,45 +249,56 @@
     }
   }
 
-  // UPDATE PRODUCT FORM HANDLING
-  document.getElementById('updateProductForm').addEventListener('submit', async function(event) {
-    event.preventDefault(); // Prevent default form submission
-
-    const productName = document.getElementById('productName').value.trim();
-    const newDescription = document.getElementById('newDescription').value.trim();
-    const newPrice = document.getElementById('newPrice').value.trim();
-    const newQuantity = document.getElementById('newQuantity').value.trim();
-    const newProductImage = document.getElementById('newProductImage').value.trim();
-    const newCategoryNamesInput = document.getElementById('newCategoryNames').value.trim();
-
-    if (!productName) {
-      displayResponse('updateProductResponse', {
-        ok: false, status: 'Validation Error', statusText: 'Product Name is required',
-        data: 'Please enter the name of the product you wish to update.'
+  // CREATE CATEGORY FORM HANDLING (API endpoint adjusted)
+  document.getElementById('createCategoryForm').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    const name = document.getElementById('createCategoryName').value.trim();
+    if (!name) {
+      displayResponse('createCategoryResponse', {
+        ok: false, status: 'Validation Error', statusText: 'Name is empty',
+        data: 'Category name cannot be empty.'
       });
       return;
     }
+    const data = { name: name };
+    // This URL needs to match your category API endpoint for creating a category
+    sendRequest('/api/categories/create', 'POST', data, 'createCategoryResponse');
+    this.reset();
+  });
 
-    const data = {
-      name: productName // This is the identifier for the product to update
-    };
-
-    // Add optional fields if they are provided
-    if (newDescription) data.description = newDescription;
-    if (newPrice) data.price = parseFloat(newPrice);
-    if (newQuantity) data.quantity = parseInt(newQuantity);
-    if (newProductImage) data.imageUrl = newProductImage; // Assuming your backend expects 'imageUrl'
-
-    if (newCategoryNamesInput) {
-      data.categoryNames = newCategoryNamesInput.split(',').map(name => name.trim()).filter(name => name !== '');
+  // UPDATE CATEGORY FORM HANDLING (API endpoint adjusted)
+  document.getElementById('updateCategoryForm').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    const id = document.getElementById('updateCategoryId').value.trim();
+    const name = document.getElementById('updateCategoryName').value.trim();
+    if (!id || !name) {
+      displayResponse('updateCategoryResponse', {
+        ok: false, status: 'Validation Error', statusText: 'ID or Name is empty',
+        data: 'Category ID and new name cannot be empty.'
+      });
+      return;
     }
+    const data = { id: parseInt(id), name: name };
+    // This URL needs to match your category API endpoint for updating a category
+    sendRequest('/api/categories/update', 'PUT', data, 'updateCategoryResponse');
+    this.reset();
+  });
 
-    // Ensure this URL matches your actual product update API endpoint
-    // This is typically a PUT request, or sometimes POST depending on your API design.
-    sendRequest('/api/products/update', 'PUT', data, 'updateProductResponse');
-
-    // Optionally reset the form after successful submission
-    // this.reset();
+  // DELETE CATEGORY FORM HANDLING (API endpoint adjusted)
+  document.getElementById('deleteCategoryForm').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    const name = document.getElementById('deleteCategoryName').value.trim();
+    if (!name) {
+      displayResponse('deleteCategoryResponse', {
+        ok: false, status: 'Validation Error', statusText: 'Name is empty',
+        data: 'Category name for deletion cannot be empty.'
+      });
+      return;
+    }
+    // This URL needs to match your category API endpoint for deleting a category
+    // It typically involves passing the name or ID in the URL path.
+    sendRequest(`/api/categories/delete/${encodeURIComponent(name)}`, 'DELETE', null, 'deleteCategoryResponse');
+    this.reset();
   });
 </script>
 </body>

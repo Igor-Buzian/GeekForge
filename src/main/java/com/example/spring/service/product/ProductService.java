@@ -7,7 +7,6 @@ import com.example.spring.entity.Product;
 import com.example.spring.repository.CategoryRepository;
 import com.example.spring.repository.ProductRepository;
 import com.example.spring.service.RepositoryService;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -67,7 +66,7 @@ public class ProductService {
         return ResponseEntity.status(HttpStatus.CREATED).header("Location", "/success").build();
     }
     @Transactional
-    public ResponseEntity<?> DeleteById(String name) {
+    public ResponseEntity<?> deleteByName(String name) {
         Product product = repositoryService.loadProductByName(name);
         productRepository.deleteById(product.getId());
         return ResponseEntity.status(HttpStatus.SEE_OTHER).header("Location", "/product-delete").build();

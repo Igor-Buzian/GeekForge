@@ -48,7 +48,8 @@ public class SecurityConfig {
                                 "/auth/v1/**"
                         ).permitAll()
                         //.requestMatchers("/success").hasRole("USER") // Requires authentication for /success
-                        .requestMatchers("product/v1/admin/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/product/v1/admin/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/category/v1/admin**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/admin/v1/**").hasAuthority("ROLE_ADMIN")
                         .anyRequest().authenticated()
                 )
