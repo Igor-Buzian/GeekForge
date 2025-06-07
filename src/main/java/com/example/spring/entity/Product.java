@@ -31,7 +31,7 @@ public class Product {
     @Column(nullable = false, name = "stock_quantity")
     int quantity;
 
-    @Column(name = "image_url")
+    @Column(name = "image_url", columnDefinition = "TEXT")
     private String productImage;
 
     @Column(updatable = false, name = "created_at")

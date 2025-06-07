@@ -1,6 +1,6 @@
 package com.example.spring.service.auth;
 
-import com.example.spring.dto.RegisterDtoValues;
+import com.example.spring.dto.register.RegisterDtoValues;
 import com.example.spring.entity.Role;
 import com.example.spring.entity.User;
 import com.example.spring.repository.RoleRepository;

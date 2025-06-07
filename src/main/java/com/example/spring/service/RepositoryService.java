@@ -59,4 +59,9 @@ public class RepositoryService {
                 .orElseThrow(()-> new UsernameNotFoundException("Category not found with name: "+name));
     }
 
+    public  Product loadProductById(Long id){
+        return  productRepository.findById(id)
+                .orElseThrow(()-> new UsernameNotFoundException("Category not found with name: "+id));
+    }
+
 }

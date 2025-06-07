@@ -1,4 +1,4 @@
-package com.example.spring.dto;
+package com.example.spring.dto.register;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -33,5 +33,4 @@ public class RegisterDtoValues {
 
     @NotBlank(message = "Confirm password is need to be")
     private String ConfirmPassword;
-
 }

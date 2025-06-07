@@ -1,4 +1,4 @@
-package com.example.spring.dto;
+package com.example.spring.dto.authentication;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

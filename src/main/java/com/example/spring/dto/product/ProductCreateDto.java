@@ -6,6 +6,7 @@ import lombok.Data;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.util.Set;
 /**
@@ -16,9 +17,11 @@ import java.util.Set;
 public class ProductCreateDto {
 
     @NotBlank(message = "Name is empty")
+    @Size(max=255, message = "Name is more than 255 letters")
     private String name;
 
     @NotBlank(message = "Description is empty")
+    @Size(max=255, message = "Name is more than 255 letters")
     private  String description;
 
 

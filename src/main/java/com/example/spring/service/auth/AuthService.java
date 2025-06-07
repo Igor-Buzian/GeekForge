@@ -1,6 +1,6 @@
 package com.example.spring.service.auth;
 
-import com.example.spring.dto.JwtRequest;
+import com.example.spring.dto.authentication.JwtRequest;
 import com.example.spring.entity.User;
 import com.example.spring.repository.UserRepository;
 import com.example.spring.service.RepositoryService;

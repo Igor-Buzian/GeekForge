@@ -132,7 +132,7 @@
                 <p th:text="${errorMessage}"></p>
             </div>
 
-            <form id="createProductForm" th:action="@{/product/v1/admin/create}" method="post">
+            <form id="createProductForm" th:action="@{/product/v1/admin/create}" method="post" enctype="multipart/form-data">
                 <div class="mb-3">
                     <label for="name" class="form-label">Product Name:</label>
                     <input type="text" class="form-control" id="name" name="name" required placeholder="Enter product name">
@@ -150,8 +150,9 @@
                     <input type="number" class="form-control" id="quantity" name="quantity" min="0" required placeholder="Enter quantity in stock">
                 </div>
                 <div class="mb-3">
-                    <label for="productImage" class="form-label">Image URL:</label>
-                    <input type="text" class="form-control" id="productImage" name="productImage" required placeholder="Enter URL of product image">
+                    <label for="imageFile" class="form-label">Product Image:</label>
+                    <input type="file" class="form-control" id="imageFile" name="imageFile" accept="image/*" required>
+                    <div class="form-text text-muted">Upload product image (JPG, PNG, GIF, etc.).</div>
                 </div>
                 <div class="mb-3">
                     <label for="categoryNames" class="form-label">Category Names (comma-separated):</label>
@@ -175,14 +176,6 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
 <script>
-    // These utility functions should ideally be in a separate .js file (e.g., /static/js/utils.js)
-    // and included in all pages that need them. For this example, they are inline.
-
-    /**
-     * Helper function to display server response.
-     * @param {string} elementId - ID of the DOM element to output the response.
-     * @param {object} response - Response object containing ok, status, statusText, data.
-     */
     function displayResponse(elementId, response) {
         const responseDiv = document.getElementById(elementId);
         responseDiv.classList.remove('success', 'error', 'd-none');
@@ -212,85 +205,78 @@
         responseDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
-    /**
-     * Universal function for sending AJAX requests.
-     * @param {string} url - Endpoint URL.
-     * @param {string} method - HTTP method (POST, PUT, DELETE).
-     * @param {object|null} data - Data to send in the request body (for POST/PUT).
-     * @param {string} responseElementId - ID of the element to display the response.
-     */
-    async function sendRequest(url, method, data, responseElementId) {
-        const responseDiv = document.getElementById(responseElementId);
-        responseDiv.classList.add('d-none'); // Hide previous response
+    // ИЗМЕНЕНИЕ 4: Модифицированный JavaScript для отправки MultipartFile
+    document.getElementById('createProductForm').addEventListener('submit', async function(event) {
+        event.preventDefault(); // Предотвращаем стандартную отправку формы
 
-        const options = {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        };
+        const form = this; // Ссылка на текущую форму
 
-        if (data) {
-            options.body = JSON.stringify(data);
+        const productName = form.elements['name'].value.trim();
+        const productPrice = parseFloat(form.elements['price'].value);
+        const productQuantity = parseInt(form.elements['quantity'].value);
+        const imageFile = form.elements['imageFile'].files[0]; // Получаем выбранный файл
+        const categoryNamesInput = form.elements['categoryNames'].value.trim();
+
+        // Базовая валидация на фронтенде
+        if (!productName || isNaN(productPrice) || productPrice <= 0 || isNaN(productQuantity) || productQuantity < 0 || !imageFile) {
+            displayResponse('createProductResponse', {
+                ok: false, status: 'Validation Error', statusText: 'Invalid input',
+                data: 'Please fill in all required fields correctly: Product Name, Price (positive number), Quantity (non-negative number), and an Image File.'
+            });
+            return; // Прерываем отправку
         }
 
+        // FormData автоматически собирает все поля формы (включая файл) по их атрибутам 'name'
+        const formData = new FormData(form);
+
+        // Добавляем категории в FormData, если они есть.
+        // FormData будет отправлять их как строку.
+        // Если у вас на бэкенде ProductCreateDto ожидает Set<String>, то Spring сам спарсит.
+        // Или вы можете спарсить их на бэкенде вручную, как я показывал в контроллере.
+        // Удаляем старое поле 'categoryNames', если оно есть и не пустое, чтобы избежать дублирования
+        // if (categoryNamesInput) {
+        //     formData.delete('categoryNames'); // Удаляем, если оно уже было в форме
+        //     formData.append('categoryNames', categoryNamesInput); // Добавляем обработанную строку
+        // }
+
+
         try {
-            const res = await fetch(url, options);
+            // URL формы берется из th:action="@{/product/v1/admin/create}"
+            const url = form.action;
+
+            const res = await fetch(url, {
+                method: 'POST', // Используем POST для создания
+                body: formData // FormData отправляется как multipart/form-data
+                // Заголовок 'Content-Type' не указывается, браузер сам добавит 'multipart/form-data' с boundary
+            });
             const responseData = await res.text();
 
-            displayResponse(responseElementId, {
+            displayResponse('createProductResponse', {
                 ok: res.ok,
                 status: res.status,
                 statusText: res.statusText,
                 data: responseData
             });
+
+            // Если успешно, можно сбросить форму
+            if (res.ok) {
+                form.reset();
+                const fileInput = form.querySelector('input[type="file"]');
+                if (fileInput) fileInput.value = ''; // Сбросить input type="file"
+            }
         } catch (error) {
-            displayResponse(responseElementId, {
+            displayResponse('createProductResponse', {
                 ok: false,
                 status: 'Network Error',
                 statusText: error.message,
                 data: `Could not connect to the server. Check your internet connection or server availability.`
             });
         }
-    }
-
-    // CREATE PRODUCT FORM HANDLING
-    document.getElementById('createProductForm').addEventListener('submit', async function(event) {
-        event.preventDefault(); // Prevent default form submission
-
-        const productName = document.getElementById('name').value.trim();
-        const productDescription = document.getElementById('description').value.trim();
-        const productPrice = parseFloat(document.getElementById('price').value);
-        const productQuantity = parseInt(document.getElementById('quantity').value);
-        const productImage = document.getElementById('productImage').value.trim();
-        const categoryNamesInput = document.getElementById('categoryNames').value.trim();
-
-        if (!productName || isNaN(productPrice) || productPrice <= 0 || isNaN(productQuantity) || productQuantity < 0 || !productImage) {
-            displayResponse('createProductResponse', {
-                ok: false, status: 'Validation Error', statusText: 'Invalid input',
-                data: 'Please fill in all required fields correctly: Product Name, Price (positive number), Quantity (non-negative number), and Image URL.'
-            });
-            return;
-        }
-
-        const categoryNames = categoryNamesInput ? categoryNamesInput.split(',').map(name => name.trim()).filter(name => name !== '') : [];
-
-        const data = {
-            name: productName,
-            description: productDescription,
-            price: productPrice,
-            quantity: productQuantity,
-            imageUrl: productImage, // Assuming your backend expects 'imageUrl'
-            categoryNames: categoryNames // Pass as an array of strings
-        };
-
-        // Ensure this URL matches your actual product creation API endpoint
-        // This is a POST request, so it should go to your backend API, not the page serving URL.
-        sendRequest('/api/products/create', 'POST', data, 'createProductResponse');
-
-        // Optionally reset the form after successful submission (or on any submission to clear fields)
-        // this.reset();
     });
+
+    // Удалите старую функцию sendRequest, если она больше не используется для отправки JSON-данных
+    // Если она используется для других частей вашего приложения, оставьте ее, но убедитесь,
+    // что логика создания продукта использует новый подход с FormData.
 </script>
 </body>
 </html>

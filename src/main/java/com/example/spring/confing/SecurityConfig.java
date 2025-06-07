@@ -3,6 +3,7 @@ package com.example.spring.confing;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -34,6 +35,7 @@ public class SecurityConfig {
      * @return A SecurityFilterChain instance.
      * @throws Exception If an error occurs during configuration.
      */
+// В вашем SecurityConfig.java
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -49,7 +51,8 @@ public class SecurityConfig {
                         ).permitAll()
                         //.requestMatchers("/success").hasRole("USER") // Requires authentication for /success
                         .requestMatchers("/product/v1/admin/**").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers("/category/v1/admin**").hasAuthority("ROLE_ADMIN")
+                        // ИЗМЕНИТЕ ЭТУ СТРОКУ:
+                        .requestMatchers("/category/v1/admin/**").hasAuthority("ROLE_ADMIN") // <-- ЗДЕСЬ ДОЛЖЕН БЫТЬ "/**"
                         .requestMatchers("/admin/v1/**").hasAuthority("ROLE_ADMIN")
                         .anyRequest().authenticated()
                 )

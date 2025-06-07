@@ -1,6 +1,6 @@
-package com.example.spring.controller;
+package com.example.spring.controller.view;
 
-import com.example.spring.dto.RegisterDtoValues;
+import com.example.spring.dto.register.RegisterDtoValues;
 import com.example.spring.service.auth.AccountSecurityService;
 import com.example.spring.service.auth.LoginAttemptService;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +31,12 @@ public class ViewController {
             };
             model.addAttribute("errorMessage",errorMessage);
         }
-        return "login-form";
+        return "/auth/login-form";
     }
+
+
+
+    
     @GetMapping("/register")
     public String register(Model model, RegisterDtoValues registerDtoValues,  @RequestParam(name = "error",required = false)String error)
     {
@@ -48,14 +52,14 @@ public class ViewController {
             };
             model.addAttribute("errorMessage",errorMessage);
         }
-        return "register-form";
+        return "/auth/register-form";
     }
 
 
     @GetMapping("/success")
     public String success()
     {
-        return "success";
+        return "/auth/success";
     }
 
 }

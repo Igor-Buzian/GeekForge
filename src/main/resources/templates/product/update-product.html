@@ -132,12 +132,19 @@
         <p th:text="${errorMessage}"></p>
       </div>
 
-      <form id="updateProductForm">
+      <form id="updateProductForm" enctype="multipart/form-data">
         <div class="mb-3">
-          <label for="productName" class="form-label">Product Name (to find and update):</label>
-          <input type="text" class="form-control" id="productName" name="name" required placeholder="Enter existing product name">
-          <div class="form-text text-muted">Enter the exact name of the product you wish to update.</div>
+          <label for="productId" class="form-label">Product ID (to find and update):</label>
+          <input type="number" class="form-control" id="productId" name="id" required placeholder="Enter existing product ID" min="1">
+          <div class="form-text text-muted">Введите точный ID продукта, который вы хотите обновить.</div>
         </div>
+
+        <div class="mb-3">
+          <label for="newProductName" class="form-label">New Product Name (optional):</label>
+          <input type="text" class="form-control" id="newProductName" name="newName" placeholder="Enter new product name">
+          <div class="form-text text-muted">Оставьте пустым, если не хотите менять название продукта.</div>
+        </div>
+
         <div class="mb-3">
           <label for="newDescription" class="form-label">New Description (optional):</label>
           <textarea class="form-control" id="newDescription" name="description" rows="5" placeholder="Enter new description"></textarea>
@@ -150,14 +157,16 @@
           <label for="newQuantity" class="form-label">New Quantity (optional):</label>
           <input type="number" class="form-control" id="newQuantity" name="quantity" min="0" placeholder="Enter new quantity">
         </div>
+
         <div class="mb-3">
-          <label for="newProductImage" class="form-label">New Image URL (optional):</label>
-          <input type="text" class="form-control" id="newProductImage" name="productImage" placeholder="Enter new image URL">
+          <label for="newProductImageFile" class="form-label">New Product Image (optional):</label>
+          <input type="file" class="form-control" id="newProductImageFile" name="imageFile"> <div class="form-text text-muted">Выберите новый файл изображения для загрузки. Это заменит существующее изображение.</div>
         </div>
+
         <div class="mb-3">
           <label for="newCategoryNames" class="form-label">New Category Names (comma-separated, optional):</label>
           <input type="text" class="form-control" id="newCategoryNames" name="categoryNames" placeholder="e.g., UpdatedCategory, AnotherOne">
-          <div class="form-text text-muted">Separate multiple category names with commas. If provided, these will replace existing categories.</div>
+          <div class="form-text text-muted">Разделяйте несколько названий категорий запятыми. Если указано, это заменит существующие категории.</div>
         </div>
         <button type="submit" class="btn btn-warning w-100">Update Product</button>
       </form>
@@ -177,9 +186,9 @@
 
 <script>
   /**
-   * Helper function to display server response.
-   * @param {string} elementId - ID of the DOM element to output the response.
-   * @param {object} response - Response object containing ok, status, statusText, data.
+   * Вспомогательная функция для отображения ответа сервера.
+   * @param {string} elementId - ID DOM-элемента для вывода ответа.
+   * @param {object} response - Объект ответа, содержащий ok, status, statusText, data.
    */
   function displayResponse(elementId, response) {
     const responseDiv = document.getElementById(elementId);
@@ -193,104 +202,108 @@
         const parsedData = JSON.parse(response.data);
         contentToDisplay = JSON.stringify(parsedData, null, 2);
       } catch (e) {
-        console.warn(`Response for ${elementId} is not JSON, displaying as plain text.`);
+        console.warn(`Ответ для ${elementId} не является JSON, отображается как простой текст.`);
       }
-      responseDiv.innerHTML = `<p class="fw-bold mb-1">Success! HTTP ${response.status}</p><pre>${contentToDisplay || 'No response content.'}</pre>`;
+      responseDiv.innerHTML = `<p class="fw-bold mb-1">Успех! HTTP ${response.status}</p><pre>${contentToDisplay || 'Нет содержимого ответа.'}</pre>`;
     } else {
       responseDiv.classList.add('error');
       try {
         const parsedError = JSON.parse(response.data);
         contentToDisplay = JSON.stringify(parsedError, null, 2);
       } catch (e) {
-        console.warn(`Error response for ${elementId} is not JSON, displaying as plain text.`);
+        console.warn(`Ответ об ошибке для ${elementId} не является JSON, отображается как простой текст.`);
       }
-      responseDiv.innerHTML = `<p class="fw-bold mb-1">Error: HTTP ${response.status} ${response.statusText}</p><pre>${contentToDisplay || 'No response body or unknown error.'}</pre>`;
+      responseDiv.innerHTML = `<p class="fw-bold mb-1">Ошибка: HTTP ${response.status} ${response.statusText}</p><pre>${contentToDisplay || 'Нет тела ответа или неизвестная ошибка.'}</pre>`;
     }
 
     responseDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
-  /**
-   * Universal function for sending AJAX requests.
-   * @param {string} url - Endpoint URL.
-   * @param {string} method - HTTP method (POST, PUT, DELETE).
-   * @param {object|null} data - Data to send in the request body (for POST/PUT).
-   * @param {string} responseElementId - ID of the element to display the response.
-   */
-  async function sendRequest(url, method, data, responseElementId) {
-    const responseDiv = document.getElementById(responseElementId);
-    responseDiv.classList.add('d-none'); // Hide previous response
+  // ОБРАБОТКА ФОРМЫ ОБНОВЛЕНИЯ ПРОДУКТА
+  document.getElementById('updateProductForm').addEventListener('submit', async function(event) {
+    event.preventDefault(); // Отменяем стандартную отправку формы
 
-    const options = {
-      method: method,
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    };
+    const productId = document.getElementById('productId').value.trim();
+    const newProductName = document.getElementById('newProductName').value.trim();
+    const newDescription = document.getElementById('newDescription').value.trim();
+    const newPrice = document.getElementById('newPrice').value.trim();
+    const newQuantity = document.getElementById('newQuantity').value.trim();
+    const newProductImageFile = document.getElementById('newProductImageFile').files[0];
+    const newCategoryNamesInput = document.getElementById('newCategoryNames').value.trim();
 
-    if (data) {
-      options.body = JSON.stringify(data);
+    // Проверяем, что ID продукта введен и является положительным числом
+    if (!productId || isNaN(productId) || parseInt(productId) <= 0) {
+      displayResponse('updateProductResponse', {
+        ok: false, status: 'Ошибка валидации', statusText: 'Неверный ID продукта',
+        data: 'Пожалуйста, введите корректный положительный ID продукта, который вы хотите обновить.'
+      });
+      return;
     }
 
+    const formData = new FormData();
+    formData.append('id', productId);
+
+    if (newProductName) formData.append('newName', newProductName);
+    if (newDescription) formData.append('description', newDescription);
+    if (newPrice) formData.append('price', newPrice);
+    if (newQuantity) formData.append('quantity', newQuantity);
+    if (newProductImageFile) {
+      formData.append('imageFile', newProductImageFile);
+    }
+
+    // ИСПРАВЛЕННАЯ ЛОГИКА ДЛЯ categoryNames
+    if (newCategoryNamesInput) {
+      const categoryNamesArray = newCategoryNamesInput.split(',')
+              .map(name => name.trim())
+              .filter(name => name !== ''); // Удаляем пустые строки после обрезки
+
+      categoryNamesArray.forEach(name => {
+        formData.append('categoryNames', name);
+      });
+    } else {
+      // Если поле categoryNamesInput пустое, но вы хотите явно очистить категории на сервере,
+      // можно отправить пустую строку. В вашей Java-логике, если getCategoryNames() не null,
+      // но getCategoryNames().isEmpty() == true, то categories.removeAll(categories) выполнится.
+      // Чтобы это работало, вам нужно убедиться, что ProductUpdateDto.categoryNames
+      // может быть пустым Set, а не null.
+      // Если вы не хотите менять категории при пустом вводе, просто оставьте этот блок пустым.
+      // Текущая Java-логика (if (productUpdateDto.getCategoryNames()!=null && !productUpdateDto.getCategoryNames().isEmpty()))
+      // означает, что если categoryNames не прислан или пуст, категории не будут обновляться.
+      // Чтобы очистить категории, вам нужно, чтобы Set<Category> был пустым, но не null.
+      // Если вы отправляете пустую строку: formData.append('categoryNames', '');
+      // то в Java вы получите Set с одной пустой строкой, что не то, что нужно.
+      // Лучший способ для очистки - это либо отдельный флаг, либо убедиться,
+      // что ваш DTO принимает Set<String> и может быть создан с пустым Set.
+      // Пока оставляем так, что если поле пустое, категории не меняются.
+    }
+
+    const url = '/product/v1/admin/update';
+
     try {
-      const res = await fetch(url, options);
+      const res = await fetch(url, {
+        method: 'PUT',
+        body: formData,
+      });
       const responseData = await res.text();
 
-      displayResponse(responseElementId, {
+      displayResponse('updateProductResponse', {
         ok: res.ok,
         status: res.status,
         statusText: res.statusText,
         data: responseData
       });
+
+      if (res.ok) {
+        this.reset(); // Сбросить форму после успешной отправки
+      }
     } catch (error) {
-      displayResponse(responseElementId, {
-        ok: false,
-        status: 'Network Error',
-        statusText: error.message,
-        data: `Could not connect to the server. Check your internet connection or server availability.`
-      });
-    }
-  }
-
-  // UPDATE PRODUCT FORM HANDLING
-  document.getElementById('updateProductForm').addEventListener('submit', async function(event) {
-    event.preventDefault(); // Prevent default form submission
-
-    const productName = document.getElementById('productName').value.trim();
-    const newDescription = document.getElementById('newDescription').value.trim();
-    const newPrice = document.getElementById('newPrice').value.trim();
-    const newQuantity = document.getElementById('newQuantity').value.trim();
-    const newProductImage = document.getElementById('newProductImage').value.trim();
-    const newCategoryNamesInput = document.getElementById('newCategoryNames').value.trim();
-
-    if (!productName) {
       displayResponse('updateProductResponse', {
-        ok: false, status: 'Validation Error', statusText: 'Product Name is required',
-        data: 'Please enter the name of the product you wish to update.'
+        ok: false,
+        status: 'Сетевая ошибка',
+        statusText: error.message,
+        data: `Не удалось подключиться к серверу. Проверьте ваше интернет-соединение или доступность сервера.`
       });
-      return;
     }
-
-    const data = {
-      name: productName // This is the identifier for the product to update
-    };
-
-    // Add optional fields if they are provided
-    if (newDescription) data.description = newDescription;
-    if (newPrice) data.price = parseFloat(newPrice);
-    if (newQuantity) data.quantity = parseInt(newQuantity);
-    if (newProductImage) data.imageUrl = newProductImage; // Assuming your backend expects 'imageUrl'
-
-    if (newCategoryNamesInput) {
-      data.categoryNames = newCategoryNamesInput.split(',').map(name => name.trim()).filter(name => name !== '');
-    }
-
-    // Ensure this URL matches your actual product update API endpoint
-    // This is typically a PUT request, or sometimes POST depending on your API design.
-    sendRequest('/api/products/update', 'PUT', data, 'updateProductResponse');
-
-    // Optionally reset the form after successful submission
-    // this.reset();
   });
 </script>
 </body>

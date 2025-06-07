@@ -1,7 +1,7 @@
 package com.example.spring.controller;
 
-import com.example.spring.dto.JwtRequest;
-import com.example.spring.dto.RegisterDtoValues;
+import com.example.spring.dto.authentication.JwtRequest;
+import com.example.spring.dto.register.RegisterDtoValues;
 import com.example.spring.service.auth.AuthService;
 import com.example.spring.service.auth.CreateService;
 import jakarta.servlet.http.HttpServletRequest;

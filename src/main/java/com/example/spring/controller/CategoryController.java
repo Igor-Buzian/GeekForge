@@ -22,12 +22,12 @@ import java.util.Map;
         private final CategoryService categoryService;
 
         @PostMapping("/create")
-        ResponseEntity<?> createCategory(@RequestBody CategoryCreateDto categoryCreateDto) {
+        ResponseEntity<?> createCategory(CategoryCreateDto categoryCreateDto) {
             return categoryService.createCategory(categoryCreateDto);
         }
 
         @PutMapping("/update")
-        ResponseEntity<?> updateCategory(@RequestBody CategoryResponseDto categoryResponseDto) {
+        ResponseEntity<?> updateCategory( CategoryResponseDto categoryResponseDto) {
             return categoryService.updateCategory(categoryResponseDto);
         }
 
