@@ -1,6 +1,7 @@
 package com.example.spring.service.product;
 
 import com.example.spring.dto.product.ProductCreateDto;
+import com.example.spring.dto.product.ProductFilterDto;
 import com.example.spring.dto.product.ProductResponseDto;
 import com.example.spring.dto.product.ProductUpdateDto;
 import com.example.spring.entity.Category;
@@ -10,6 +11,10 @@ import com.example.spring.repository.ProductRepository;
 import com.example.spring.service.RepositoryService;
 import com.example.spring.service.firebase.FirebaseStorageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -17,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -164,5 +170,62 @@ public class ProductService {
                 })
                 .collect(Collectors.toList());
         return ResponseEntity.ok(productDtos); // Возвращаем 200 OK со списком продуктов
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> getFilteredAndPagedProducts(
+            ProductFilterDto filterDto
+    ){
+        Sort sort = Sort.unsorted();
+        if(filterDto.getSortBy()!=null && !filterDto.getSortBy().isEmpty()){
+          Sort.Direction direction = "desk".equalsIgnoreCase(filterDto.getSortDirection()) ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+            switch (filterDto.getSortBy().toLowerCase()){
+                case "name": sort = Sort.by(direction, "name"); break;
+                case "minPrice": sort = Sort.by(direction, "minPrice"); break;
+                case "maxPrice": sort = Sort.by(direction, "maxPrice"); break;
+                case  "categoryNames": sort = Sort.by(direction, "categoryNames"); break;
+                case "updatedBefore": sort = Sort.by(direction, "updatedBefore"); break;
+                case "updatedAfter": sort = Sort.by(direction, "updatedAfter"); break;
+                case  "createdBefore": sort = Sort.by(direction,"createdBefore"); break;
+                case "createdAfter": sort = Sort.by(direction, "createdAfter"); break;
+                default: sort = Sort.by(direction, "name");  break;
+            }
+
+        }
+        Pageable pageable = PageRequest.of(filterDto.getPage(),filterDto.getSize(),sort);
+
+        Page<Product> productsPage = productRepository.findFilterProduct(
+                filterDto.getName(),
+                filterDto.getMinPrice(),
+                filterDto.getMaxPrice(),
+                filterDto.getCategoryNames(),
+                filterDto.getUpdatedBefore(), // updateBefore
+                filterDto.getUpdatedAfter(),  // updateAfter
+                filterDto.getCreatedBefore(), // createBefore
+                filterDto.getCreatedAfter(),  // createAfter
+                pageable
+        );
+
+        Page<ProductResponseDto> dtoPage = productsPage.map(
+              product -> {
+                  ProductResponseDto dto = new ProductResponseDto();
+                  dto.setProductImage(product.getProductImage());
+                  dto.setName(product.getName());
+                  dto.setPrice(product.getPrice());
+                  dto.setDescription(product.getDescription());
+                  dto.setId(product.getId());
+                  dto.setQuantity(product.getQuantity());
+                  dto.setUpdated(product.getUpdated());
+                  dto.setCreated(product.getCreated());
+                  if(product.getCategories()!=null && !product.getCategories().isEmpty())
+                  dto.setCategoryNames(product.getCategories().stream()
+                          .map(Category::getName)
+                          .collect(Collectors.toSet()));
+                  else dto.setCategoryNames(Set.of());
+                  return dto;
+});
+
+        return ResponseEntity.ok(dtoPage);
     }
 }

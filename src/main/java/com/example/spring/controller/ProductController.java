@@ -1,6 +1,7 @@
 package com.example.spring.controller;
 
 import com.example.spring.dto.product.ProductCreateDto;
+import com.example.spring.dto.product.ProductFilterDto;
 import com.example.spring.dto.product.ProductUpdateDto;
 import com.example.spring.service.product.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -50,8 +51,8 @@ public class ProductController {
     }
 
     @GetMapping("/getAllProducts")
-    public ResponseEntity<?> getAllProducts(){
-      return  productService.getAllProducts();
+    public ResponseEntity<?> getAllProducts(@ModelAttribute ProductFilterDto filterDto){
+      return  productService.getFilteredAndPagedProducts(filterDto);
     }
 }
 

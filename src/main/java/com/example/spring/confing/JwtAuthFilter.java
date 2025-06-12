@@ -75,6 +75,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                             user, null,
                             Collections.singleton(new SimpleGrantedAuthority(roleName))
                     );
+                    logger.debug("Token roles: {}", jwtTokenUtils.getRoleFromToken(token));
+                    logger.debug("Token valid: {}", jwtTokenUtils.validateToken(token));
                     SecurityContextHolder.getContext().setAuthentication(auth);
                     logger.debug("Authentication set for user: {}", currentUserEmail);
                 } else {
