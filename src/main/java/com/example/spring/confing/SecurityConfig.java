@@ -54,7 +54,6 @@ public class SecurityConfig {
                         // ИЗМЕНИТЕ ЭТУ СТРОКУ:
                         .requestMatchers("/category/v1/admin/**").hasAuthority("ROLE_ADMIN") // <-- ЗДЕСЬ ДОЛЖЕН БЫТЬ "/**"
                         .requestMatchers("/admin/v1/**").hasAuthority("ROLE_ADMIN")
-
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

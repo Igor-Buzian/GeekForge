@@ -8,6 +8,7 @@ import com.example.spring.entity.Category;
 import com.example.spring.entity.Product;
 import com.example.spring.repository.CategoryRepository;
 import com.example.spring.repository.ProductRepository;
+import com.example.spring.repository.ProductSpecification;
 import com.example.spring.service.RepositoryService;
 import com.example.spring.service.firebase.FirebaseStorageService;
 import lombok.RequiredArgsConstructor;
@@ -24,10 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.google.common.io.Files.getFileExtension;
@@ -143,89 +141,54 @@ public class ProductService {
         return ResponseEntity.ok("Successful delete product!");
     }
 
-    @Transactional(readOnly = true)
-    public ResponseEntity<List<ProductResponseDto>> getAllProducts() {
-        List<Product> products = productRepository.findAll();
-        if (products.isEmpty()) {
-            return ResponseEntity.noContent().build(); // Возвращаем 204 No Content, если продуктов нет
-        }
-        List<ProductResponseDto> productDtos = products.stream()
-                .map(product -> {
-                    ProductResponseDto dto = new ProductResponseDto();
-                    dto.setName(product.getName());
-                    dto.setCategoryNames(product.getCategories().stream().map(Category::getName).collect(Collectors.toSet()));
-                    dto.setPrice(product.getPrice());
-                    dto.setCreated(product.getCreated());
-                    dto.setQuantity(product.getQuantity());
-                    dto.setDescription(product.getDescription());
-                    dto.setUpdated(product.getUpdated());
-                    dto.setId(product.getId());
-                    dto.setProductImage(product.getProductImage());
-                   /* String hiddenImageUrl = product.getProductImage();
-                    if(hiddenImageUrl!=null && !hiddenImageUrl.isEmpty()){
-                      String url = firebaseStorageService.extractFilePathFromFirebaseUrl(hiddenImageUrl);
-                      dto.setProductImage(url);
-                    }*/
-                return dto;
-                })
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(productDtos); // Возвращаем 200 OK со списком продуктов
-    }
-
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true) // Транзакция только для чтения
     public ResponseEntity<?> getFilteredAndPagedProducts(
             ProductFilterDto filterDto
     ){
-        Sort sort = Sort.unsorted();
-        if(filterDto.getSortBy()!=null && !filterDto.getSortBy().isEmpty()){
-          Sort.Direction direction = "desk".equalsIgnoreCase(filterDto.getSortDirection()) ? Sort.Direction.DESC : Sort.Direction.ASC;
-
-            switch (filterDto.getSortBy().toLowerCase()){
-                case "name": sort = Sort.by(direction, "name"); break;
-                case "minPrice": sort = Sort.by(direction, "minPrice"); break;
-                case "maxPrice": sort = Sort.by(direction, "maxPrice"); break;
-                case  "categoryNames": sort = Sort.by(direction, "categoryNames"); break;
-                case "updatedBefore": sort = Sort.by(direction, "updatedBefore"); break;
-                case "updatedAfter": sort = Sort.by(direction, "updatedAfter"); break;
-                case  "createdBefore": sort = Sort.by(direction,"createdBefore"); break;
-                case "createdAfter": sort = Sort.by(direction, "createdAfter"); break;
-                default: sort = Sort.by(direction, "name");  break;
-            }
-
+        // Установка направления сортировки
+        Sort.Direction sortDirection = Sort.Direction.ASC;
+        if (filterDto.getSortDirection() != null && !filterDto.getSortDirection().isEmpty()) {
+            sortDirection = "desc".equalsIgnoreCase(filterDto.getSortDirection()) ? Sort.Direction.DESC : Sort.Direction.ASC;
         }
-        Pageable pageable = PageRequest.of(filterDto.getPage(),filterDto.getSize(),sort);
 
-        Page<Product> productsPage = productRepository.findFilterProduct(
-                filterDto.getName(),
-                filterDto.getMinPrice(),
-                filterDto.getMaxPrice(),
-                filterDto.getCategoryNames(),
-                filterDto.getUpdatedBefore(), // updateBefore
-                filterDto.getUpdatedAfter(),  // updateAfter
-                filterDto.getCreatedBefore(), // createBefore
-                filterDto.getCreatedAfter(),  // createAfter
-                pageable
+        // Определение поля для сортировки (по умолчанию "created")
+        String sortByField = (filterDto.getSortBy() == null || filterDto.getSortBy().isEmpty()) ? "created" : filterDto.getSortBy();
+
+        // Создание объекта Pageable для пагинации и сортировки
+        // Проверка на page/size для предотвращения ошибок, если они не заданы
+        int page = filterDto.getPage() < 0 ? 0 : filterDto.getPage();
+        int size = filterDto.getSize() <= 0 ? 10 : filterDto.getSize(); // Значение по умолчанию 10
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(sortDirection, sortByField)
         );
 
-        Page<ProductResponseDto> dtoPage = productsPage.map(
-              product -> {
-                  ProductResponseDto dto = new ProductResponseDto();
-                  dto.setProductImage(product.getProductImage());
-                  dto.setName(product.getName());
-                  dto.setPrice(product.getPrice());
-                  dto.setDescription(product.getDescription());
-                  dto.setId(product.getId());
-                  dto.setQuantity(product.getQuantity());
-                  dto.setUpdated(product.getUpdated());
-                  dto.setCreated(product.getCreated());
-                  if(product.getCategories()!=null && !product.getCategories().isEmpty())
-                  dto.setCategoryNames(product.getCategories().stream()
-                          .map(Category::getName)
-                          .collect(Collectors.toSet()));
-                  else dto.setCategoryNames(Set.of());
-                  return dto;
-});
+        // Получение отфильтрованных и пагинированных продуктов
+        Page<Product> productPage = productRepository.findAll(ProductSpecification.withFilters(filterDto), pageable);
 
-        return ResponseEntity.ok(dtoPage);
+        // Преобразование Page<Product> в Page<ProductResponseDto>
+        Page<ProductResponseDto> productResponsePage = productPage.map(product -> {
+            ProductResponseDto dto = new ProductResponseDto();
+            dto.setId(product.getId());
+            dto.setName(product.getName());
+            dto.setDescription(product.getDescription());
+            dto.setPrice(product.getPrice());
+            dto.setQuantity(product.getQuantity());
+            dto.setProductImage(product.getProductImage());
+            dto.setCreated(product.getCreated());
+            dto.setUpdated(product.getUpdated());
+            // Проверка на null для категорий перед stream()
+            dto.setCategoryNames(product.getCategories() != null ?
+                    product.getCategories().stream()
+                            .map(Category::getName) // Использование ссылки на метод для чистоты
+                            .collect(Collectors.toSet()) :
+                    Collections.emptySet()); // Возвращаем пустой Set, если категорий нет
+            return dto;
+        });
+
+        return ResponseEntity.ok(productResponsePage);
     }
 }
+
