@@ -8,33 +8,7 @@
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
   <link rel="stylesheet" th:href="@{/css/list-products.css}">
-  <style>
-    /* Дополнительные стили для лучшего вида фильтров на странице */
-    .filter-section {
-      background-color: #f8f9fa;
-      padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 4px rgba(0,0,0,.05);
-    }
-    .filter-section .row > div {
-      margin-bottom: 15px;
-    }
-    .product-image {
-      width: 60px;
-      height: 60px;
-      object-fit: cover;
-      border-radius: 4px;
-    }
-    .no-products-message {
-      text-align: center;
-      padding: 20px;
-      color: #6c757d;
-      border: 1px dashed #ced4da;
-      border-radius: 5px;
-      margin-top: 20px;
-    }
-  </style>
+
 </head>
 <body>
 
@@ -147,6 +121,15 @@
             </select>
           </div>
           <div class="col-md-2">
+            <label for="filterPageSize" class="form-label">Items per Page</label>
+            <select class="form-select" id="filterPageSize" name="size">
+              <option value="">Default (Backend)</option> <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+            </select>
+          </div>
+          <div class="col-md-2">
             <button type="button" class="btn btn-primary w-100" id="applyFilterBtn">Apply Filters</button>
           </div>
           <div class="col-md-2">
@@ -180,7 +163,7 @@
 
 <script>
   let currentPage = 0;
-  const pageSize = 10; // Number of items per page
+  // const pageSize = 10; // Эту строку УДАЛЯЕМ, так как теперь size управляется бэкендом или пользовательским выбором.
 
   let productsTableContainer;
   let noProductsMessage;
@@ -210,13 +193,13 @@
     loadProducts();
 
     document.getElementById('applyFilterBtn').addEventListener('click', function() {
-      currentPage = 0;
+      currentPage = 0; // Сбрасываем на первую страницу при применении нового фильтра
       loadProducts();
     });
 
     document.getElementById('resetFilterBtn').addEventListener('click', function() {
       document.getElementById('filterForm').reset();
-      currentPage = 0;
+      currentPage = 0; // Сбрасываем на первую страницу при сбросе
       loadProducts();
     });
   });
@@ -227,7 +210,6 @@
     const maxPrice = document.getElementById('filterMaxPrice').value;
     const categories = document.getElementById('filterCategories').value;
 
-    // Получаем значения полей даты
     const createdAfter = document.getElementById('filterCreatedAfter').value;
     const createdBefore = document.getElementById('filterCreatedBefore').value;
     const updatedAfter = document.getElementById('filterUpdatedAfter').value;
@@ -235,6 +217,9 @@
 
     const sortBy = document.getElementById('filterSortBy').value;
     const sortDirection = document.getElementById('filterSortDirection').value;
+    // Получаем выбранное количество элементов на странице из нового dropdown
+    const pageSizeFromDropdown = document.getElementById('filterPageSize').value;
+
 
     const params = new URLSearchParams();
     if (productName) params.append('name', productName);
@@ -242,7 +227,6 @@
     if (maxPrice) params.append('maxPrice', maxPrice);
     if (categories) params.append('categoryNames', categories);
 
-    // Передаем значения даты в параметрах запроса
     if (createdAfter) params.append('createdAfter', createdAfter);
     if (createdBefore) params.append('createdBefore', createdBefore);
     if (updatedAfter) params.append('updatedAfter', updatedAfter);
@@ -251,7 +235,13 @@
     params.append('sortBy', sortBy);
     params.append('sortDirection', sortDirection);
     params.append('page', currentPage);
-    params.append('size', pageSize);
+
+    // Добавляем 'size' только если выбрано конкретное значение (не 'Default')
+    // Пустая строка в value="" позволит бэкенду использовать свой дефолт
+    if (pageSizeFromDropdown) {
+      params.append('size', pageSizeFromDropdown);
+    }
+
 
     productsTableContainer.innerHTML = '<p class="text-center text-info">Loading products...</p>';
     noProductsMessage.classList.add('d-none');
@@ -443,6 +433,7 @@
     `;
 
     products.forEach(product => {
+      // Здесь и далее используем чистый JavaScript синтаксис для шаблонных литералов
       const imageUrl = product.productImage || 'https://via.placeholder.com/60?text=No+Image';
 
       const categories = product.categoryNames && Array.isArray(product.categoryNames) && product.categoryNames.length > 0
@@ -450,8 +441,8 @@
               : 'N/A';
 
       // Форматируем даты без времени для отображения
-      const createdDate = product.created ? new Date(product.created).toLocaleDateString() : 'N/A'; // Изменено на toLocaleDateString()
-      const updatedDate = product.updated ? new Date(product.updated).toLocaleDateString() : 'N/A'; // Изменено на toLocaleDateString()
+      const createdDate = product.created ? new Date(product.created).toLocaleDateString() : 'N/A';
+      const updatedDate = product.updated ? new Date(product.updated).toLocaleDateString() : 'N/A';
       const price = product.price != null ? `$${product.price.toFixed(2)}` : '$0.00';
 
       tableHtml += `

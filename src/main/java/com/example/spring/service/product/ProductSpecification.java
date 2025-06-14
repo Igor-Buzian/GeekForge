@@ -1,4 +1,4 @@
-package com.example.spring.repository;
+package com.example.spring.service.product;
 
 import com.example.spring.dto.product.ProductFilterDto;
 import com.example.spring.entity.Product;

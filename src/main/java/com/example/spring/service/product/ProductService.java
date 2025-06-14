@@ -8,10 +8,10 @@ import com.example.spring.entity.Category;
 import com.example.spring.entity.Product;
 import com.example.spring.repository.CategoryRepository;
 import com.example.spring.repository.ProductRepository;
-import com.example.spring.repository.ProductSpecification;
 import com.example.spring.service.RepositoryService;
 import com.example.spring.service.firebase.FirebaseStorageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -33,6 +32,12 @@ import static com.google.common.io.Files.getFileExtension;
 @Service
 @RequiredArgsConstructor
 public class ProductService {
+    @Value("${list.products.pagination.default.page}")
+    private int defaultPage;
+    @Value("${list.products.pagination.default.size}")
+    private  int defaultSize;
+
+
     private final RepositoryService repositoryService;
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
@@ -82,6 +87,7 @@ public class ProductService {
         productRepository.save(product);
         return  ResponseEntity.status(HttpStatus.CREATED).body(Map.of("Message: ", "This product was success created!"));
     }
+
     @Transactional
     public ResponseEntity<?> updateProduct(ProductUpdateDto productUpdateDto, MultipartFile imageFile) {
         if (!productRepository.existsById(productUpdateDto.getId()))
@@ -153,15 +159,11 @@ public class ProductService {
 
         // Определение поля для сортировки (по умолчанию "created")
         String sortByField = (filterDto.getSortBy() == null || filterDto.getSortBy().isEmpty()) ? "created" : filterDto.getSortBy();
-
-        // Создание объекта Pageable для пагинации и сортировки
-        // Проверка на page/size для предотвращения ошибок, если они не заданы
-        int page = filterDto.getPage() < 0 ? 0 : filterDto.getPage();
-        int size = filterDto.getSize() <= 0 ? 10 : filterDto.getSize(); // Значение по умолчанию 10
+        int pageToUse = (filterDto.getPage()<0 ? defaultPage : filterDto.getPage());
 
         Pageable pageable = PageRequest.of(
-                page,
-                size,
+                pageToUse,
+                defaultSize,
                 Sort.by(sortDirection, sortByField)
         );
 

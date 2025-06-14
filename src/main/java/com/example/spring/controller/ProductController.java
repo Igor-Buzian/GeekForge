@@ -21,7 +21,7 @@ import java.util.Map;
 public class ProductController {
     private  final ProductService productService;
     @PostMapping("/create")
-    ResponseEntity<?> createProduct(@RequestBody ProductCreateDto productCreateDto, @RequestParam("imageFile") MultipartFile imageFile){
+    ResponseEntity<?> createProduct(ProductCreateDto productCreateDto, @RequestParam("imageFile") MultipartFile imageFile){
         try {
             return  productService.createProduct(productCreateDto,imageFile);
         } catch (Exception e) {
@@ -30,7 +30,7 @@ public class ProductController {
     }
 
     @PutMapping("/update")
-    ResponseEntity<?> updateProduct(@RequestBody ProductUpdateDto productUpdateDto, @RequestParam(value = "imageFile", required = false) MultipartFile imageFile){
+    ResponseEntity<?> updateProduct( ProductUpdateDto productUpdateDto, @RequestParam(value = "imageFile", required = false) MultipartFile imageFile){
       try{
           return productService.updateProduct(productUpdateDto, imageFile);
       }catch (Exception e){
