@@ -21,7 +21,6 @@ public class ProductCreateDto {
     private String name;
 
     @NotBlank(message = "Description is empty")
-    @Size(max=255, message = "Name is more than 255 letters")
     private  String description;
 
 

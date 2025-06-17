@@ -56,6 +56,8 @@ public class User implements UserDetails {
     )
     private Set<Role> roles = new HashSet<>();
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private Cart cart;
     /**
      * Returns the authorities granted to the user. In this case, it returns the roles associated with the user.
      *

@@ -1,6 +1,6 @@
 package com.example.spring.service.product;
 
-import com.example.spring.dto.product.ProductFilterDto;
+import com.example.spring.dto.product.ProductFilterAdminDto;
 import com.example.spring.entity.Product;
 import com.example.spring.entity.Category;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -12,9 +12,9 @@ import java.util.List;
 import jakarta.persistence.criteria.Predicate;
 import java.util.Arrays; // Для удобства обработки списка категорий
 
-public class ProductSpecification {
+public class ProductSpecificationAdmin {
 
-    public static Specification<Product> withFilters(ProductFilterDto filterDto) {
+    public static Specification<Product> withFilters(ProductFilterAdminDto filterDto) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 

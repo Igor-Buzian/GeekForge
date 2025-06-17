@@ -29,7 +29,7 @@ public class Product {
     private BigDecimal price;
 
     @Column(nullable = false, name = "stock_quantity")
-    int quantity;
+    Integer quantity;
 
     @Column(name = "image_url", columnDefinition = "TEXT")
     private String productImage;

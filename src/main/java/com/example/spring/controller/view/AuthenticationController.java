@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RequiredArgsConstructor
-public class ViewController {
+public class AuthenticationController {
     private final LoginAttemptService loginAttemptService;
     private final AccountSecurityService accountSecurityService;
     @GetMapping("/login")

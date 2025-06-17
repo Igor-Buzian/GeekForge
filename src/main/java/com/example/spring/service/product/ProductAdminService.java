@@ -1,7 +1,7 @@
 package com.example.spring.service.product;
 
 import com.example.spring.dto.product.ProductCreateDto;
-import com.example.spring.dto.product.ProductFilterDto;
+import com.example.spring.dto.product.ProductFilterAdminDto;
 import com.example.spring.dto.product.ProductResponseDto;
 import com.example.spring.dto.product.ProductUpdateDto;
 import com.example.spring.entity.Category;
@@ -31,7 +31,7 @@ import static com.google.common.io.Files.getFileExtension;
 
 @Service
 @RequiredArgsConstructor
-public class ProductService {
+public class ProductAdminService {
     @Value("${list.products.pagination.default.page}")
     private int defaultPage;
     @Value("${list.products.pagination.default.size}")
@@ -149,7 +149,7 @@ public class ProductService {
 
     @Transactional(readOnly = true) // Транзакция только для чтения
     public ResponseEntity<?> getFilteredAndPagedProducts(
-            ProductFilterDto filterDto
+            ProductFilterAdminDto filterDto
     ){
         // Установка направления сортировки
         Sort.Direction sortDirection = Sort.Direction.ASC;
@@ -168,7 +168,7 @@ public class ProductService {
         );
 
         // Получение отфильтрованных и пагинированных продуктов
-        Page<Product> productPage = productRepository.findAll(ProductSpecification.withFilters(filterDto), pageable);
+        Page<Product> productPage = productRepository.findAll(ProductSpecificationAdmin.withFilters(filterDto), pageable);
 
         // Преобразование Page<Product> в Page<ProductResponseDto>
         Page<ProductResponseDto> productResponsePage = productPage.map(product -> {

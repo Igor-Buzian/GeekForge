@@ -1,10 +1,10 @@
 package com.example.spring.controller;
 
 import com.example.spring.dto.product.ProductCreateDto;
-import com.example.spring.dto.product.ProductFilterDto;
+import com.example.spring.dto.product.ProductFilterAdminDto;
 import com.example.spring.dto.product.ProductResponseDto;
 import com.example.spring.dto.product.ProductUpdateDto;
-import com.example.spring.service.product.ProductService;
+import com.example.spring.service.product.ProductAdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -18,8 +18,8 @@ import java.util.Map;
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("product/v1/admin")
-public class ProductController {
-    private  final ProductService productService;
+public class ProductAdminController {
+    private  final ProductAdminService productService;
     @PostMapping("/create")
     ResponseEntity<?> createProduct(ProductCreateDto productCreateDto, @RequestParam("imageFile") MultipartFile imageFile){
         try {
@@ -56,7 +56,7 @@ public class ProductController {
     public ResponseEntity<Page<ProductResponseDto>> getFilteredAndPagedProducts(
             // @ModelAttribute позволяет Spring заполнять DTO из параметров запроса
             // (например, ?productName=test&minPrice=10&page=0&size=10)
-            ProductFilterDto filterDto) {
+            ProductFilterAdminDto filterDto) {
 
         // Вызываем метод сервиса, который уже содержит логику фильтрации
         ResponseEntity<?> response = productService.getFilteredAndPagedProducts(filterDto);

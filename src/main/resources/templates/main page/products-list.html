@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Наши Товары</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛒</text></svg>">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <style>
+    .product-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    .product-card img {
+      max-width: 100%;
+      height: 150px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto 15px;
+    }
+    .product-card .card-title {
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .product-card .card-text {
+      font-size: 0.9rem;
+      color: #555;
+      flex-grow: 1;
+      margin-bottom: 10px;
+    }
+    .product-card .price {
+      font-size: 1.1rem;
+      color: #007bff;
+      font-weight: bold;
+      margin-top: auto;
+    }
+    .product-card .btn-add-to-cart {
+      width: 100%;
+      margin-top: 10px;
+    }
+    .stock-indicator {
+      font-weight: bold;
+      margin-top: 5px;
+    }
+    .in-stock {
+      color: green;
+    }
+    .out-of-stock {
+      color: red;
+    }
+    .main-content {
+      padding-top: 70px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">Наш Магазин</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="/products">Товары</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/cart">Корзина</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/my-orders">Мои заказы</a>
+          </li>
+        </ul>
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/login">Войти</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/logout">Выйти</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<main class="main-content">
+  <div class="container mt-5 pt-3">
+    <h1 class="mb-5 text-center text-primary">Наши Товары</h1>
+
+    <div id="alertPlaceholder" class="mb-3"></div>
+
+    <div class="filter-section mb-4 p-3 border rounded bg-light">
+      <h4 class="mb-3 text-secondary">Фильтры товаров</h4>
+      <form id="filterForm" class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label for="filterProductName" class="form-label">Название товара</label>
+          <input type="text" class="form-control" id="filterProductName" name="name">
+        </div>
+        <div class="col-md-2">
+          <label for="filterMinPrice" class="form-label">Мин. цена</label>
+          <input type="number" step="0.01" class="form-control" id="filterMinPrice" name="minPrice">
+        </div>
+        <div class="col-md-2">
+          <label for="filterMaxPrice" class="form-label">Макс. цена</label>
+          <input type="number" step="0.01" class="form-control" id="filterMaxPrice" name="maxPrice">
+        </div>
+        <div class="col-md-3">
+          <label for="filterCategories" class="form-label">Категории (через запятую)</label>
+          <input type="text" class="form-control" id="filterCategories" name="categoryNames">
+        </div>
+
+        <div class="col-md-2">
+          <label for="filterSortBy" class="form-label">Сортировать по</label>
+          <select class="form-select" id="filterSortBy" name="sortBy">
+            <option value="name">Названию</option>
+            <option value="price">Цене</option>
+            <option value="createdAt">Дате добавления</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label for="filterSortDirection" class="form-label">Порядок</label>
+          <select class="form-select" id="filterSortDirection" name="sortDirection">
+            <option value="asc">По возрастанию</option>
+            <option value="desc">По убыванию</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label for="filterPageSize" class="form-label">Товаров на странице</label>
+          <select class="form-select" id="filterPageSize" name="size">
+            <option value="12">12</option>
+            <option value="24">24</option>
+            <option value="48">48</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button type="button" class="btn btn-primary w-100" id="applyFilterBtn">Применить фильтры</button>
+        </div>
+        <div class="col-md-2">
+          <button type="button" class="btn btn-secondary w-100" id="resetFilterBtn">Сбросить фильтры</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="productsGridContainer" class="row">
+    </div>
+
+    <p class="no-products-message d-none text-center fs-5 text-muted" id="noProductsMessage">
+      По вашему запросу товары не найдены.
+    </p>
+
+    <nav aria-label="Product Page Navigation">
+      <ul class="pagination justify-content-center mt-4" id="paginationControls">
+      </ul>
+    </nav>
+
+  </div>
+</main>
+
+<footer class="footer mt-5 py-3 bg-light">
+  <div class="container text-center">
+    <p>&copy; 2025 Ваш Магазин. Все права защищены.</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script>
+  let currentPage = 0;
+  let productsGridContainer;
+  let noProductsMessage;
+  let paginationControls;
+  let alertPlaceholder;
+
+  document.addEventListener('DOMContentLoaded', function() {
+    productsGridContainer = document.getElementById('productsGridContainer');
+    noProductsMessage = document.getElementById('noProductsMessage');
+    paginationControls = document.getElementById('paginationControls');
+    alertPlaceholder = document.getElementById('alertPlaceholder');
+
+    if (!productsGridContainer || !noProductsMessage || !paginationControls || !alertPlaceholder) {
+      console.error("Критические элементы DOM не найдены. Проверьте структуру HTML.");
+      document.body.innerHTML = `<div class="alert alert-danger text-center mt-5" role="alert">
+                Произошла внутренняя ошибка загрузки страницы. Пожалуйста, попробуйте позже.
+            </div>`;
+      return;
+    }
+
+    loadProducts();
+
+    document.getElementById('applyFilterBtn').addEventListener('click', function() {
+      currentPage = 0;
+      loadProducts();
+    });
+
+    document.getElementById('resetFilterBtn').addEventListener('click', function() {
+      document.getElementById('filterForm').reset();
+      currentPage = 0;
+      loadProducts();
+    });
+  });
+
+  function showAlert(message, type) {
+    alertPlaceholder.innerHTML = '';
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+    alertPlaceholder.append(wrapper);
+  }
+
+  async function loadProducts() {
+    const productName = document.getElementById('filterProductName').value;
+    const minPrice = document.getElementById('filterMinPrice').value;
+    const maxPrice = document.getElementById('filterMaxPrice').value;
+    const categories = document.getElementById('filterCategories').value;
+    const sortBy = document.getElementById('filterSortBy').value;
+    const sortDirection = document.getElementById('filterSortDirection').value;
+    const pageSizeFromDropdown = document.getElementById('filterPageSize').value;
+
+    const params = new URLSearchParams();
+    if (productName) params.append('name', productName);
+    if (minPrice) params.append('minPrice', minPrice);
+    if (maxPrice) params.append('maxPrice', maxPrice);
+    if (categories) params.append('categoryNames', categories);
+    params.append('sortBy', sortBy);
+    params.append('sortDirection', sortDirection);
+    params.append('page', currentPage);
+    params.append('size', pageSizeFromDropdown);
+
+    productsGridContainer.innerHTML = '<p class="text-center text-info">Загрузка товаров...</p>';
+    noProductsMessage.classList.add('d-none');
+    paginationControls.classList.add('d-none');
+    alertPlaceholder.innerHTML = '';
+
+    try {
+      // ИЗМЕНЕНИЕ ЗДЕСЬ: URL теперь "/api/v1/user/all-products"
+      // Убедитесь, что URL совпадает с @RequestMapping контроллера
+      const response = await fetch(`/api/product/v1/getAllProducts?${params.toString()}`);
+
+      if (response.status === 200) {
+        const pageData = await response.json();
+        const products = pageData.content;
+        const totalPages = pageData.totalPages;
+
+        if (products && products.length > 0) {
+          noProductsMessage.classList.add('d-none');
+          productsGridContainer.innerHTML = createProductsGrid(products);
+          updatePaginationControls(totalPages);
+        } else {
+          productsGridContainer.innerHTML = '';
+          noProductsMessage.classList.remove('d-none');
+          updatePaginationControls(0);
+        }
+      } else if (response.status === 204) {
+        productsGridContainer.innerHTML = '';
+        noProductsMessage.classList.remove('d-none');
+        updatePaginationControls(0);
+      } else {
+        const errorText = await response.text();
+        productsGridContainer.innerHTML = `<div class="alert alert-danger" role="alert">
+                    Не удалось загрузить товары: HTTP ${response.status} - ${errorText}
+                </div>`;
+        noProductsMessage.classList.add('d-none');
+        updatePaginationControls(0);
+        console.error('API Error:', errorText);
+        showAlert(`Ошибка при загрузке товаров: ${response.status} - ${errorText}`, 'danger');
+      }
+    } catch (error) {
+      productsGridContainer.innerHTML = `<div class="alert alert-danger" role="alert">
+                Ошибка сети: ${error.message}. Не удалось подключиться к серверу.
+            </div>`;
+      noProductsMessage.classList.add('d-none');
+      updatePaginationControls(0);
+      console.error('Error fetching products:', error);
+      showAlert(`Ошибка сети: ${error.message}. Пожалуйста, проверьте ваше соединение.`, 'danger');
+    }
+  }
+
+  function updatePaginationControls(totalPages) {
+    paginationControls.innerHTML = '';
+
+    if (totalPages <= 1) {
+      paginationControls.classList.add('d-none');
+      return;
+    } else {
+      paginationControls.classList.remove('d-none');
+    }
+
+    const prevItem = document.createElement('li');
+    prevItem.classList.add('page-item');
+    if (currentPage === 0) prevItem.classList.add('disabled');
+    const prevLink = document.createElement('a');
+    prevLink.classList.add('page-link');
+    prevLink.href = '#';
+    prevLink.textContent = 'Предыдущая';
+    prevLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (currentPage > 0) {
+        currentPage--;
+        loadProducts();
+      }
+    });
+    prevItem.appendChild(prevLink);
+    paginationControls.appendChild(prevItem);
+
+    const maxPageLinks = 5;
+    let startPage = Math.max(0, currentPage - Math.floor(maxPageLinks / 2));
+    let endPage = Math.min(totalPages - 1, startPage + maxPageLinks - 1);
+
+    if (endPage - startPage + 1 < maxPageLinks) {
+      startPage = Math.max(0, endPage - maxPageLinks + 1);
+    }
+
+    if (startPage > 0) {
+      const firstPageItem = document.createElement('li');
+      firstPageItem.classList.add('page-item');
+      const firstPageLink = document.createElement('a');
+      firstPageLink.classList.add('page-link');
+      firstPageLink.href = '#';
+      firstPageLink.textContent = '1';
+      firstPageLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        currentPage = 0;
+        loadProducts();
+      });
+      firstPageItem.appendChild(firstPageLink);
+      paginationControls.appendChild(firstPageItem);
+      if (startPage > 1) {
+        const ellipsisItem = document.createElement('li');
+        ellipsisItem.classList.add('page-item', 'disabled');
+        const ellipsisLink = document.createElement('span');
+        ellipsisLink.classList.add('page-link');
+        ellipsisLink.textContent = '...';
+        ellipsisItem.appendChild(ellipsisLink);
+        paginationControls.appendChild(ellipsisItem);
+      }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      const pageItem = document.createElement('li');
+      pageItem.classList.add('page-item');
+      if (i === currentPage) pageItem.classList.add('active');
+      const pageLink = document.createElement('a');
+      pageLink.classList.add('page-link');
+      pageLink.href = '#';
+      pageLink.textContent = i + 1;
+      pageLink.dataset.page = i;
+      pageLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        currentPage = parseInt(e.target.dataset.page);
+        loadProducts();
+      });
+      pageItem.appendChild(pageLink);
+      paginationControls.appendChild(pageItem);
+    }
+
+    if (endPage < totalPages - 1) {
+      if (endPage < totalPages - 2) {
+        const ellipsisItem = document.createElement('li');
+        ellipsisItem.classList.add('page-item', 'disabled');
+        const ellipsisLink = document.createElement('span');
+        ellipsisLink.classList.add('page-link');
+        ellipsisLink.textContent = '...';
+        ellipsisItem.appendChild(ellipsisLink);
+        paginationControls.appendChild(ellipsisItem);
+      }
+      const lastPageItem = document.createElement('li');
+      lastPageItem.classList.add('page-item');
+      const lastPageLink = document.createElement('a');
+      lastPageLink.classList.add('page-link');
+      lastPageLink.href = '#';
+      lastPageLink.textContent = totalPages;
+      lastPageLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        currentPage = totalPages - 1;
+        loadProducts();
+      });
+      lastPageItem.appendChild(lastPageLink);
+      paginationControls.appendChild(lastPageItem);
+    }
+
+    const nextItem = document.createElement('li');
+    nextItem.classList.add('page-item');
+    if (currentPage === totalPages - 1) nextItem.classList.add('disabled');
+    const nextLink = document.createElement('a');
+    nextLink.classList.add('page-link');
+    nextLink.href = '#';
+    nextLink.textContent = 'Следующая';
+    nextLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (currentPage < totalPages - 1) {
+        currentPage++;
+        loadProducts();
+      }
+    });
+    nextItem.appendChild(nextLink);
+    paginationControls.appendChild(nextItem);
+  }
+
+  function createProductsGrid(products) {
+    if (!products || products.length === 0) {
+      return '';
+    }
+
+    let gridHtml = '';
+
+    products.forEach(product => {
+      const imageUrl = product.productImage  || 'https://via.placeholder.com/200?text=Нет+изображения';
+      const categories = product.categoryNames && Array.isArray(product.categoryNames) && product.categoryNames.length > 0
+              ? product.categoryNames.join(', ')
+              : 'Без категории';
+      const price = product.price != null ? `${product.price.toFixed(2)} MDL` : '0.00 MDL';
+      const inStockClass = product.inStock ? 'in-stock' : 'out-of-stock';
+      const inStockText = product.inStock ? 'В наличии' : 'Нет в наличии';
+      const disableButton = product.inStock ? '' : 'disabled';
+
+      gridHtml += `
+                <div class="col-md-4 col-sm-6 col-lg-3 d-flex align-items-stretch">
+                    <div class="card product-card w-100">
+                        <img src="${imageUrl}" class="card-img-top" alt="${product.name || 'Изображение товара'}">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">${product.name || 'Название не указано'}</h5>
+                            <p class="card-text flex-grow-1">${product.description || 'Описание отсутствует.'}</p>
+                            <p class="card-text"><strong>Категории:</strong> ${categories}</p>
+                            <p class="price">${price}</p>
+                            <p class="stock-indicator ${inStockClass}">${inStockText}</p>
+                            <button type="button" class="btn btn-primary btn-add-to-cart mt-auto"
+                                    data-product-id="${product.id}"
+                                    ${disableButton}>
+                                Добавить в корзину
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+    });
+    return gridHtml;
+  }
+
+  document.addEventListener('click', async function(event) {
+    if (event.target.classList.contains('btn-add-to-cart')) {
+      const button = event.target;
+      const productId = button.dataset.productId;
+
+      if (!productId) {
+        console.error('Не найден ID продукта для добавления в корзину.');
+        showAlert('Ошибка: не найден ID продукта для добавления.', 'danger');
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = 'Добавляем...';
+
+      try {
+        const response = await fetch('/api/v1/cart/add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            // 'Authorization': `Bearer ${localStorage.getItem('jwtToken')}` // Если используете токены
+          },
+          body: JSON.stringify({
+            productId: parseInt(productId),
+            quantity: 1
+          })
+        });
+
+        if (response.ok) {
+          const responseData = await response.json();
+          showAlert('Товар успешно добавлен в корзину!', 'success');
+          console.log('Корзина обновлена:', responseData);
+        } else if (response.status === 400) {
+          const errorData = await response.json();
+          showAlert(`Ошибка: ${errorData.message || 'Не удалось добавить товар в корзину.'}`, 'danger');
+        } else if (response.status === 401 || response.status === 403) {
+          showAlert('Для добавления товаров в корзину, пожалуйста, войдите в систему.', 'danger');
+          setTimeout(() => window.location.href = '/login', 2000);
+        }
+        else {
+          const errorData = await response.json();
+          showAlert(`Ошибка при добавлении товара: ${errorData.Error || response.statusText}`, 'danger');
+          console.error('Ошибка добавления в корзину:', errorData);
+        }
+      } catch (error) {
+        showAlert('Произошла ошибка сети при добавлении товара в корзину.', 'danger');
+        console.error('Ошибка сети:', error);
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Добавить в корзину';
+      }
+    }
+  });
+</script>
+</body>
+</html>

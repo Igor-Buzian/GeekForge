@@ -3,14 +3,10 @@ package com.example.spring.controller;
 
 import com.example.spring.dto.category.CategoryCreateDto;
 import com.example.spring.dto.category.CategoryResponseDto;
-import com.example.spring.dto.product.ProductCreateDto;
-import com.example.spring.dto.product.ProductUpdateDto;
 import com.example.spring.service.category.CategoryService;
-import com.example.spring.service.product.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
