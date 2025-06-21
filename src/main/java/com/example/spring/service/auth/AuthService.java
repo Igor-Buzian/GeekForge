@@ -48,7 +48,7 @@ public class AuthService {
 
     /**
      *  gg wp
-     * @param jwtRequest hui
+     * @param jwtRequest
      * @param request
      * @param response
      * @param captchaResponse

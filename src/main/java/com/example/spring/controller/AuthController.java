@@ -13,6 +13,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * REST controller for authentication-related operations.
@@ -37,9 +39,18 @@ public class AuthController {
      * @return A ResponseEntity indicating the success or failure of the registration.
      */
     @PostMapping("/register")
-    public ResponseEntity<?> register(@ModelAttribute() @Valid RegisterDtoValues registerDtoValues, BindingResult bindingResult, HttpServletResponse response, HttpServletRequest request, @RequestParam(name = "g-recaptcha-response", required = false) String captchaResponse){
-        if(bindingResult.hasErrors()) return  ResponseEntity.status(HttpStatus.FORBIDDEN).header("Location","/register").build();
-        return createNewUser.createNewUser(registerDtoValues, response, request,captchaResponse);
+    public ResponseEntity<?> register(@ModelAttribute() @Valid RegisterDtoValues registerDtoValues, BindingResult bindingResult, HttpServletResponse response, HttpServletRequest request, @RequestParam(name = "g-recaptcha-response", required = false) String captchaResponse) {
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = new HashMap<>();
+            bindingResult.getFieldErrors().forEach(error ->
+                    errors.put(error.getField(), error.getDefaultMessage()));
+
+            bindingResult.getGlobalErrors().forEach(error ->
+                    errors.put("globalError", error.getDefaultMessage()));
+
+            return ResponseEntity.badRequest().body(errors);
+        }
+        return createNewUser.createNewUser(registerDtoValues, response, request, captchaResponse);
     }
 
     /**

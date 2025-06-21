@@ -7,6 +7,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛒</text></svg>">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
   <style>
+    /* ... ваш существующий CSS ... */
     .product-card {
       border: 1px solid #ddd;
       border-radius: 8px;
@@ -58,6 +59,15 @@
     .main-content {
       padding-top: 70px;
     }
+    .cart-counter {
+      background-color: red;
+      color: white;
+      border-radius: 50%;
+      padding: 2px 6px;
+      font-size: 0.75em;
+      vertical-align: super;
+      margin-left: -8px; /* Немного смещаем влево для наложения */
+    }
   </style>
 </head>
 <body>
@@ -75,7 +85,9 @@
             <a class="nav-link active" aria-current="page" href="/products">Товары</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/cart">Корзина</a>
+            <a class="nav-link" href="/cart">
+              Корзина <span id="cartItemCount" class="cart-counter d-none">0</span>
+            </a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="/my-orders">Мои заказы</a>
@@ -180,14 +192,16 @@
   let noProductsMessage;
   let paginationControls;
   let alertPlaceholder;
+  let cartItemCountSpan; // Новый элемент для счетчика корзины
 
   document.addEventListener('DOMContentLoaded', function() {
     productsGridContainer = document.getElementById('productsGridContainer');
     noProductsMessage = document.getElementById('noProductsMessage');
     paginationControls = document.getElementById('paginationControls');
     alertPlaceholder = document.getElementById('alertPlaceholder');
+    cartItemCountSpan = document.getElementById('cartItemCount'); // Инициализируем
 
-    if (!productsGridContainer || !noProductsMessage || !paginationControls || !alertPlaceholder) {
+    if (!productsGridContainer || !noProductsMessage || !paginationControls || !alertPlaceholder || !cartItemCountSpan) {
       console.error("Критические элементы DOM не найдены. Проверьте структуру HTML.");
       document.body.innerHTML = `<div class="alert alert-danger text-center mt-5" role="alert">
                 Произошла внутренняя ошибка загрузки страницы. Пожалуйста, попробуйте позже.
@@ -196,6 +210,7 @@
     }
 
     loadProducts();
+    updateCartItemCount(); // Загружаем количество товаров в корзине при загрузке страницы
 
     document.getElementById('applyFilterBtn').addEventListener('click', function() {
       currentPage = 0;
@@ -220,6 +235,35 @@
         `;
     alertPlaceholder.append(wrapper);
   }
+
+  // Новая функция для обновления счетчика товаров в корзине
+  async function updateCartItemCount() {
+    try {
+      const response = await fetch('/api/v1/cart/summary'); // Создайте эндпоинт для получения сводки корзины
+      if (response.ok) {
+        const cartSummary = await response.json();
+        if (cartSummary && cartSummary.totalQuantity !== undefined) {
+          cartItemCountSpan.textContent = cartSummary.totalQuantity;
+          if (cartSummary.totalQuantity > 0) {
+            cartItemCountSpan.classList.remove('d-none');
+          } else {
+            cartItemCountSpan.classList.add('d-none');
+          }
+        }
+      } else if (response.status === 401 || response.status === 403) {
+        // Пользователь не авторизован, корзина пуста
+        cartItemCountSpan.textContent = '0';
+        cartItemCountSpan.classList.add('d-none');
+      } else {
+        console.error('Failed to fetch cart summary:', response.status);
+        cartItemCountSpan.classList.add('d-none'); // Скрыть счетчик при ошибке
+      }
+    } catch (error) {
+      console.error('Error fetching cart summary:', error);
+      cartItemCountSpan.classList.add('d-none'); // Скрыть счетчик при ошибке сети
+    }
+  }
+
 
   async function loadProducts() {
     const productName = document.getElementById('filterProductName').value;
@@ -246,8 +290,6 @@
     alertPlaceholder.innerHTML = '';
 
     try {
-      // ИЗМЕНЕНИЕ ЗДЕСЬ: URL теперь "/api/v1/user/all-products"
-      // Убедитесь, что URL совпадает с @RequestMapping контроллера
       const response = await fetch(`/api/product/v1/getAllProducts?${params.toString()}`);
 
       if (response.status === 200) {
@@ -481,6 +523,7 @@
           const responseData = await response.json();
           showAlert('Товар успешно добавлен в корзину!', 'success');
           console.log('Корзина обновлена:', responseData);
+          updateCartItemCount(); // Обновляем счетчик после успешного добавления
         } else if (response.status === 400) {
           const errorData = await response.json();
           showAlert(`Ошибка: ${errorData.message || 'Не удалось добавить товар в корзину.'}`, 'danger');
@@ -505,3 +548,9 @@
 </script>
 </body>
 </html>
+"
+
+
+
+
+

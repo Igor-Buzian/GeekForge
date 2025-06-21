@@ -17,18 +17,23 @@
             border: 1px solid red;
             border-radius: 4px;
             background-color: #ffeeee;
+            display: none;
         }
-        .error-field { /* Добавьте стиль для полей с ошибками */
-            border-color: red;
+        .error-field {
+            border-color: red !important;
         }
-        .field-error { /* Стиль для сообщений об ошибках под полем */
+        .field-error {
             color: red;
             font-size: 0.9em;
+            height: 16px;
+            display: block;
+            margin-top: -10px;
+            margin-bottom: 5px;
         }
         form {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 10px;
         }
         input {
             padding: 10px;
@@ -48,7 +53,6 @@
         }
         #recaptcha-container {
             margin: 15px 0;
-            /* Изменено на 'block' по умолчанию, чтобы капча всегда была видна */
             display: block;
         }
     </style>
@@ -56,27 +60,20 @@
 <body>
 <h2>Register</h2>
 
-<div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></div>
+<div id="globalError" class="error-message"></div>
 
-<form id="registerForm" th:object="${registerDtoValues}">
-    <input type="text" th:field="*{username}" placeholder="Username" required
-           th:class="${#fields.hasErrors('username') ? 'error-field' : ''}"/>
-    <span th:if="${#fields.hasErrors('username')}" th:errors="*{username}" class="field-error">Username error!</span>
+<form id="registerForm">
+    <input type="text" name="username" placeholder="Username" required/>
+    <span class="field-error" data-for="username"></span>
 
-    <input type="email" th:field="*{email}" placeholder="Email" required
-           th:class="${#fields.hasErrors('email') ? 'error-field' : ''}"/>
-    <span th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="field-error">Email error!</span>
+    <input type="email" name="email" placeholder="Email" required/>
+    <span class="field-error" data-for="email"></span>
 
-    <input type="password" th:field="*{password}" placeholder="Password" required
-           th:class="${#fields.hasErrors('password') ? 'error-field' : ''}"/>
-    <span th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="field-error">Password error!</span>
+    <input type="password" name="password" placeholder="Password" required/>
+    <span class="field-error" data-for="password"></span>
 
-    <input type="password" th:field="*{confirmPassword}" placeholder="Confirm password" required
-           th:class="${#fields.hasErrors('confirmPassword') ? 'error-field' : ''}"/>
-    <span th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}" class="field-error">Confirm Password error!</span>
-
-    <span th:if="${#fields.hasGlobalErrors()}" th:each="error : ${#fields.globalErrors()}" th:text="${error}" class="field-error"></span>
-
+    <input type="password" name="confirmPassword" placeholder="Confirm password" required/>
+    <span class="field-error" data-for="confirmPassword"></span>
 
     <div id="recaptcha-container" class="g-recaptcha"
          data-sitekey="6Lcjd0ArAAAAAAL3X5sQAsNtBpjr14Bqumz4cAy4"></div>
@@ -84,29 +81,26 @@
     <button type="submit">Register</button>
 </form>
 
-<script th:inline="javascript">
-    /*<![CDATA[*/
+<script>
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('registerForm');
-        const recaptchaContainer = document.getElementById('recaptcha-container');
+        const globalErrorDiv = document.getElementById('globalError');
 
         form.addEventListener('submit', function(e) {
             e.preventDefault();
 
+            // Очищаем предыдущие ошибки
+            document.querySelectorAll('.field-error').forEach(el => el.textContent = '');
+            document.querySelectorAll('input').forEach(input => input.classList.remove('error-field'));
+            globalErrorDiv.style.display = 'none';
+            globalErrorDiv.textContent = '';
+
             const formData = new FormData(form);
-            const username = formData.get('username');
-            const email = formData.get('email');
-            const password = formData.get('password');
-            const confirmPassword = formData.get('confirmPassword');
-            const captchaResponse = formData.get('g-recaptcha-response');
-
             const params = new URLSearchParams();
-            params.append('username', username);
-            params.append('email', email);
-            params.append('password', password);
-            params.append('confirmPassword', confirmPassword);
-            params.append('g-recaptcha-response', captchaResponse);
 
+            for (const [key, value] of formData.entries()) {
+                params.append(key, value);
+            }
 
             fetch('/auth/v1/register', {
                 method: 'POST',
@@ -119,16 +113,31 @@
                     if (response.redirected) {
                         window.location.href = response.url;
                     } else if (!response.ok) {
-                        console.error('Server responded with an error:', response.status);
+                        return response.json().then(errors => {
+                            // Обрабатываем ошибки полей
+                            for (const [field, message] of Object.entries(errors)) {
+                                if (field === 'globalError') {
+                                    globalErrorDiv.textContent = message;
+                                    globalErrorDiv.style.display = 'block';
+                                } else {
+                                    const input = document.querySelector(`[name="${field}"]`);
+                                    const errorSpan = document.querySelector(`.field-error[data-for="${field}"]`);
+
+                                    if (input) input.classList.add('error-field');
+                                    if (errorSpan) errorSpan.textContent = message;
+                                }
+                            }
+                        });
                     }
                     return response;
                 })
                 .catch(error => {
                     console.error('Error:', error);
+                    globalErrorDiv.textContent = 'An unexpected error occurred. Please try again.';
+                    globalErrorDiv.style.display = 'block';
                 });
         });
     });
-    /*]]>*/
 </script>
 </body>
 </html>

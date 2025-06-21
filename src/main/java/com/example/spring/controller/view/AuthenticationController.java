@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -38,7 +39,7 @@ public class AuthenticationController {
 
     
     @GetMapping("/register")
-    public String register(Model model, RegisterDtoValues registerDtoValues,  @RequestParam(name = "error",required = false)String error)
+    public String register(Model model, RegisterDtoValues registerDtoValues, @RequestParam(name = "error",required = false)String error)
     {
         // Добавляем пустой объект RegisterDtoValues в модель
         model.addAttribute("registerDtoValues", registerDtoValues);
