@@ -263,4 +263,55 @@ public class CartService {
                 totalQuantity
         );
     }
+    @Transactional
+    public CartResponseDto purchaseCart(User user) {
+        Cart userCart = cartRepository.findByUser(user)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Корзина не найдена для пользователя: " + user.getUsername()));
+
+        if (userCart.getCartItems().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ваша корзина пуста. Невозможно оформить заказ.");
+        }
+
+        // Проверка наличия товаров и обновление количества на складе
+        for (CartItem item : userCart.getCartItems()) {
+            Product product = item.getProduct();
+            Integer requestedQuantity = item.getQuantity();
+
+            if (product.getQuantity() == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Количество на складе для продукта '" + product.getName() + "' не определено.");
+            }
+
+            if (product.getQuantity() < requestedQuantity) {
+                // Если товара не хватает, отменяем покупку и сообщаем об ошибке
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        String.format("Недостаточно товара '%s' на складе. Доступно: %d, запрошено: %d",
+                                product.getName(), product.getQuantity(), requestedQuantity));
+            }
+
+            // Уменьшаем количество товара на складе
+            product.setQuantity(product.getQuantity() - requestedQuantity);
+            productRepository.save(product); // Сохраняем обновленное количество товара
+        }
+
+        // --- Имитация создания заказа (опционально, для реального функционала) ---
+        // Здесь вы можете создать сущность Order и OrderItem, сохранить их в базу данных.
+        // Например:
+        // Order newOrder = new Order();
+        // newOrder.setUser(user);
+        // newOrder.setOrderDate(LocalDateTime.now());
+        // newOrder.setTotalAmount(mapCartToCartResponseDto(userCart).getTotalCost());
+        // // Добавьте логику для копирования CartItem в OrderItem
+        // newOrder = orderRepository.save(newOrder);
+
+
+        // Очистка корзины после "покупки"
+        // Удаляем все CartItem, связанные с этой корзиной
+        // Благодаря orphanRemoval=true, достаточно просто очистить коллекцию.
+        userCart.getCartItems().clear();
+        cartRepository.save(userCart); // Сохраняем пустую корзину
+
+        // Возвращаем пустую корзину или подтверждение покупки
+        return mapCartToCartResponseDto(userCart); // Теперь корзина пуста
+    }
+
 }

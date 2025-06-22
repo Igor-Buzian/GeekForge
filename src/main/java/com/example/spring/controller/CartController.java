@@ -122,4 +122,29 @@ public class CartController {
             return ResponseEntity.status(401).build();
         }
     }
+    @PostMapping("/purchase")
+    public ResponseEntity<CartResponseDto> purchaseCart(
+            @AuthenticationPrincipal User currentUser) {
+        if (currentUser == null) {
+            return ResponseEntity.status(401).build(); // Unauthorized
+        }
+        try {
+            CartResponseDto purchasedCart = cartService.purchaseCart(currentUser);
+            // Если покупка прошла успешно и корзина очищена,
+            // можно вернуть 200 OK с пустой корзиной или просто 204 No Content.
+            // Возвращаем 200 OK с обновленной (пустой) корзиной.
+            return ResponseEntity.ok(purchasedCart);
+        } catch (Exception e) {
+            System.err.println("Error during cart purchase: " + e.getMessage());
+            // Если это ResponseStatusException, то можно извлечь статус и сообщение
+            if (e instanceof org.springframework.web.server.ResponseStatusException) {
+               // HttpStatus status = ((org.springframework.web.server.ResponseStatusException) e).getStatusCode();
+                String reason = ((org.springframework.web.server.ResponseStatusException) e).getReason();
+                // Возвращаем статус ошибки, который был выброшен из сервиса
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new CartResponseDto(null, null, null, null, 0));
+            }
+            // Для других ошибок
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new CartResponseDto(null, null, null, null, 0));
+        }
+    }
 }
