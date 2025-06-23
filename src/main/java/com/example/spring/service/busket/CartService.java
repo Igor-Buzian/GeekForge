@@ -19,8 +19,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Pageable; // Not used in this snippet, can remove if not needed
+import org.springframework.data.domain.Sort; // Not used in this snippet, can remove if not needed
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,12 +48,10 @@ public class CartService {
     private int defaultSize;
 
     @Transactional(readOnly = true)
-    public CartResponseDto getUserCart(User user) { // <<< ЭТОТ МЕТОД НУЖЕН ВАШЕМУ КОНТРОЛЛЕРУ >>>
-
-
+    public CartResponseDto getUserCart(User user) {
         return cartRepository.findByUser(user)
                 .map(this::mapCartToCartResponseDto)
-                .orElseGet(() -> new CartResponseDto( null, null, Collections.emptyList(), BigDecimal.ZERO, 0));
+                .orElseGet(() -> new CartResponseDto( null, null, Collections.emptyList(), BigDecimal.ZERO, 0, null)); // Added null for errorMessage
     }
 
     /**
@@ -70,15 +68,9 @@ public class CartService {
                 .orElse(null);
 
         if (userCart == null || userCart.getCartItems().isEmpty()) {
-            // If cart is not found or empty, return an empty page.
             return new PageImpl<>(Collections.emptyList(), PageRequest.of(defaultPage, defaultSize), 0);
         }
 
-        // Important: Ensure cartItems are eagerly loaded or fetch them explicitly
-        // For @OneToMany relation, if FetchType.LAZY, you might need to initialize them:
-        // Hibernate.initialize(userCart.getCartItems());
-        // Or change FetchType to EAGER in Cart entity for 'cartItems' field.
-        // For now, assuming they are available due to Transactional(readOnly = true) and typical usage.
         List<CartItem> allCartItems = userCart.getCartItems().stream().toList();
 
         // 1. Optional Filtering by product name
@@ -89,12 +81,10 @@ public class CartService {
                     .collect(Collectors.toList());
         }
 
-
         // 3. Manual Pagination (since we're filtering/sorting in memory)
         int start = (int) PageRequest.of(filterDto.getPage(), defaultSize).getOffset();
         int end = Math.min((start + defaultSize), allCartItems.size());
 
-        // Handle cases where start is out of bounds (e.g., page number too high for available items)
         if (start > allCartItems.size()) {
             return new PageImpl<>(Collections.emptyList(), PageRequest.of(filterDto.getPage(), defaultSize), allCartItems.size());
         }
@@ -102,23 +92,23 @@ public class CartService {
         List<CartItem> pagedItems = allCartItems.subList(start, end);
 
         List<CartItemDto> itemDtos = pagedItems.stream()
-                .map(item -> new CartItemDto(
-                        item.getId(),
-                        item.getProduct().getId(),
-                        item.getProduct().getName(),
-                        item.getProduct().getProductImage(),
-                        item.getProduct().getPrice(),
-                        item.getQuantity(),
-                        item.getProduct().getPrice().multiply(BigDecimal.valueOf(item.getQuantity()))
-                ))
+                .map(item -> {
+                    CartItemDto dto = new CartItemDto(
+                            item.getId(),
+                            item.getProduct().getId(),
+                            item.getProduct().getName(),
+                            item.getProduct().getProductImage(),
+                            item.getProduct().getPrice(),
+                            item.getQuantity(),
+                            item.getProduct().getPrice().multiply(BigDecimal.valueOf(item.getQuantity())),
+                            item.isSelected()
+                    );
+                    return dto;
+                })
                 .collect(Collectors.toList());
 
         return new PageImpl<>(itemDtos, PageRequest.of(filterDto.getPage(), defaultSize), allCartItems.size());
     }
-
-    // --- All other methods (addProductToCart, removeProductFromCart, updateCartItemQuantity, mapCartToCartResponseDto) remain unchanged from previous versions ---
-
-    // (Previous methods would be here)
 
     @Transactional
     public CartResponseDto addProductToCart(User user, CartItemRequestDto requestDto) {
@@ -151,6 +141,7 @@ public class CartService {
                                 product.getName(), product.getQuantity(), newQuantity - cartItem.getQuantity()));
             }
             cartItem.setQuantity(newQuantity);
+            cartItem.setSelected(true); // Ensure it's selected when quantity is updated/added
         } else {
             if (product.getQuantity() != null && product.getQuantity() < quantityToAdd) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -161,12 +152,14 @@ public class CartService {
             cartItem.setCart(userCart);
             cartItem.setProduct(product);
             cartItem.setQuantity(quantityToAdd);
+            cartItem.setSelected(true); // Default to selected when adding new item
         }
 
         cartItemRepository.save(cartItem);
-        cartRepository.save(userCart);
+        // cartRepository.save(userCart); // No need to save cart explicitly here,
+        // as cartItem.setCart(userCart) already links them and userCart is managed.
 
-        return mapCartToCartResponseDto(userCart); // Возвращаем полную корзину после добавления
+        return mapCartToCartResponseDto(userCart); // Return the full updated cart
     }
 
     @Transactional
@@ -180,23 +173,8 @@ public class CartService {
         CartItem cartItem = cartItemRepository.findByCartAndProduct(userCart, product)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not in cart."));
 
+        userCart.getCartItems().remove(cartItem); // This will trigger orphanRemoval
 
-        // Удаляем CartItem ИЗ КОЛЛЕКЦИИ cartItems в объекте userCart.
-        // Благодаря orphanRemoval = true, Hibernate/JPA автоматически удалит этот CartItem
-        // из базы данных при завершении транзакции.
-        userCart.getCartItems().remove(cartItem);
-
-        // НЕ нужно вызывать cartItemRepository.delete(cartItem); вручную,
-        // так как orphanRemoval=true сделает это автоматически.
-        // Вызов cartRepository.save(userCart); также не строго необходим,
-        // так как userCart уже находится в контексте персистентности,
-        // и изменение его коллекции будет автоматически обнаружено.
-        // Однако, его можно оставить, если это помогает ясности или в других случаях.
-        // cartRepository.save(userCart); // Можно убрать или оставить по желанию.
-
-        // Важно: если вы удалили элемент из коллекции,
-        // userCart теперь содержит актуальный список CartItem.
-        // mapCartToCartResponseDto должен брать данные из этого объекта userCart.
         return mapCartToCartResponseDto(userCart);
     }
 
@@ -227,53 +205,44 @@ public class CartService {
         cartItem.setQuantity(newQuantity);
         cartItemRepository.save(cartItem);
 
-        cartRepository.save(userCart);
+        // cartRepository.save(userCart); // No need to save cart explicitly if cartItem is managed.
 
         return mapCartToCartResponseDto(userCart);
     }
 
-    private CartResponseDto mapCartToCartResponseDto(Cart cart) {
-        List<CartItem> cartItems = cart.getCartItems() != null ? cart.getCartItems().stream().toList() : Collections.emptyList();
+    // --- НОВЫЙ МЕТОД: Обновление состояния выбранности товара в корзине ---
+    @Transactional
+    public CartResponseDto updateCartItemSelection(User user, Long productId, boolean selected) {
+        Cart userCart = cartRepository.findByUser(user)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Корзина не найдена для пользователя: " + user.getUsername()));
 
-        List<CartItemDto> itemDtos = cartItems.stream()
-                .map(item -> new CartItemDto(
-                        item.getId(),
-                        item.getProduct().getId(),
-                        item.getProduct().getName(),
-                        item.getProduct().getProductImage(),
-                        item.getProduct().getPrice(),
-                        item.getQuantity(),
-                        item.getProduct().getPrice().multiply(BigDecimal.valueOf(item.getQuantity()))
-                ))
-                .collect(Collectors.toList());
+        Product product = repositoryService.loadProductById(productId);
 
-        BigDecimal totalCost = itemDtos.stream()
-                .map(CartItemDto::getItemTotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        CartItem cartItem = cartItemRepository.findByCartAndProduct(userCart, product)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Товар не найден в корзине."));
 
-        Integer totalQuantity = itemDtos.stream()
-                .mapToInt(CartItemDto::getQuantity)
-                .sum();
+        cartItem.setSelected(selected); // Устанавливаем новое состояние выбранности
+        cartItemRepository.save(cartItem); // Сохраняем изменение
 
-        return new CartResponseDto(
-                cart.getId(),
-                cart.getUser().getId(),
-                itemDtos,
-                totalCost,
-                totalQuantity
-        );
+        return mapCartToCartResponseDto(userCart); // Возвращаем обновленную сводку корзины
     }
+
     @Transactional
     public CartResponseDto purchaseCart(User user) {
         Cart userCart = cartRepository.findByUser(user)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Корзина не найдена для пользователя: " + user.getUsername()));
 
-        if (userCart.getCartItems().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ваша корзина пуста. Невозможно оформить заказ.");
+        // Фильтруем только выбранные товары для покупки
+        List<CartItem> selectedCartItems = userCart.getCartItems().stream()
+                .filter(CartItem::isSelected)
+                .toList();
+
+        if (selectedCartItems.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "В вашей корзине нет выбранных товаров для оформления заказа.");
         }
 
-        // Проверка наличия товаров и обновление количества на складе
-        for (CartItem item : userCart.getCartItems()) {
+        // Проверка наличия товаров и обновление количества на складе только для выбранных товаров
+        for (CartItem item : selectedCartItems) {
             Product product = item.getProduct();
             Integer requestedQuantity = item.getQuantity();
 
@@ -282,36 +251,61 @@ public class CartService {
             }
 
             if (product.getQuantity() < requestedQuantity) {
-                // Если товара не хватает, отменяем покупку и сообщаем об ошибке
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        String.format("Недостаточно товара '%s' на складе. Доступно: %d, запрошено: %d",
+                        String.format("Недостаточно товара '%s' на складе. Доступно: %d, запрошено: %d. Пожалуйста, измените количество или отмените выбор.",
                                 product.getName(), product.getQuantity(), requestedQuantity));
             }
 
-            // Уменьшаем количество товара на складе
             product.setQuantity(product.getQuantity() - requestedQuantity);
-            productRepository.save(product); // Сохраняем обновленное количество товара
+            productRepository.save(product);
         }
 
-        // --- Имитация создания заказа (опционально, для реального функционала) ---
-        // Здесь вы можете создать сущность Order и OrderItem, сохранить их в базу данных.
-        // Например:
-        // Order newOrder = new Order();
-        // newOrder.setUser(user);
-        // newOrder.setOrderDate(LocalDateTime.now());
-        // newOrder.setTotalAmount(mapCartToCartResponseDto(userCart).getTotalCost());
-        // // Добавьте логику для копирования CartItem в OrderItem
-        // newOrder = orderRepository.save(newOrder);
+        // Удаление только выбранных товаров из корзины
+        userCart.getCartItems().removeAll(selectedCartItems);
+        cartRepository.save(userCart); // Сохраняем корзину после удаления выбранных товаров
 
-
-        // Очистка корзины после "покупки"
-        // Удаляем все CartItem, связанные с этой корзиной
-        // Благодаря orphanRemoval=true, достаточно просто очистить коллекцию.
-        userCart.getCartItems().clear();
-        cartRepository.save(userCart); // Сохраняем пустую корзину
-
-        // Возвращаем пустую корзину или подтверждение покупки
-        return mapCartToCartResponseDto(userCart); // Теперь корзина пуста
+        // Возвращаем обновленную корзину, в которой остались только невыбранные товары
+        return mapCartToCartResponseDto(userCart);
     }
 
+    // Изменяем mapCartToCartResponseDto, чтобы он вычислял итоги только для выбранных товаров
+    private CartResponseDto mapCartToCartResponseDto(Cart cart) {
+        List<CartItem> allCartItems = cart.getCartItems() != null ? cart.getCartItems().stream().toList() : Collections.emptyList();
+
+        // Мы всегда маппим ВСЕ элементы в DTO, но расчет totalCost/totalQuantity будет идти только по selected = true
+        List<CartItemDto> itemDtos = allCartItems.stream()
+                .map(item -> {
+                    CartItemDto dto = new CartItemDto(
+                            item.getId(),
+                            item.getProduct().getId(),
+                            item.getProduct().getName(),
+                            item.getProduct().getProductImage(),
+                            item.getProduct().getPrice(),
+                            item.getQuantity(),
+                            item.getProduct().getPrice().multiply(BigDecimal.valueOf(item.getQuantity())),
+                            item.isSelected()
+                    );
+                    return dto;
+                })
+                .collect(Collectors.toList());
+
+        // Расчет общей стоимости и количества ТОЛЬКО для выбранных товаров
+        BigDecimal totalCost = itemDtos.stream()
+                .filter(CartItemDto::isSelected) // Filter by selected = true
+                .map(CartItemDto::getItemTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        Integer totalQuantity = itemDtos.stream()
+                .filter(CartItemDto::isSelected) // Filter by selected = true
+                .mapToInt(CartItemDto::getQuantity)
+                .sum();
+
+        return new CartResponseDto(
+                cart.getId(),
+                cart.getUser().getId(),
+                itemDtos, // Return all items, so the frontend can display them all
+                totalCost,
+                totalQuantity,null
+        );
+    }
 }

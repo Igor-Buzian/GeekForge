@@ -20,4 +20,6 @@ public class CartItemDto {
     private BigDecimal productPrice; // Price of one unit of the product
     private Integer quantity;     // Quantity of this product in the cart
     private BigDecimal itemTotal; // Total cost for this specific cart item (productPrice * quantity)
+    private boolean selected;
+
 }

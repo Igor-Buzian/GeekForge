@@ -68,6 +68,68 @@
       vertical-align: super;
       margin-left: -8px; /* Немного смещаем влево для наложения */
     }
+    /* ... ваш существующий CSS ... */
+
+    /* Улучшения для карточек товаров */
+    .product-card {
+      transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+    .product-card:hover {
+      transform: translateY(-5px); /* Легкий подъем при наведении */
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15); /* Увеличенная тень */
+    }
+
+    .product-card img {
+      border-bottom: 1px solid #eee; /* Небольшая граница под изображением */
+      padding-bottom: 15px; /* Отступ от границы */
+    }
+
+    .product-card .price {
+      color: #28a745; /* Используйте более яркий цвет, например, зеленый для цены */
+      font-size: 1.3rem; /* Чуть больший размер для цены */
+      margin-top: 15px; /* Отступ сверху */
+    }
+
+    /* Кнопка "Добавить в корзину" */
+    .btn-add-to-cart {
+      font-weight: bold;
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    .btn-add-to-cart:hover:not(:disabled) {
+      background-color: #0056b3; /* Чуть темнее при наведении */
+    }
+
+    /* Для товаров "Нет в наличии" */
+    .product-card.out-of-stock {
+      opacity: 0.7; /* Снизить прозрачность */
+      pointer-events: none; /* Отключить события мыши */
+    }
+
+    .product-card.out-of-stock .stock-indicator {
+      color: #dc3545; /* Четкий красный */
+      font-weight: bold;
+    }
+
+    /* Улучшения для навигации */
+    .navbar-nav .nav-link {
+      transition: color 0.2s ease-in-out;
+    }
+
+    .navbar-nav .nav-link:hover {
+      color: rgba(255, 255, 255, 0.75); /* Немного светлее при наведении */
+    }
+
+    /* Улучшения для фильтров */
+    .filter-section .form-label {
+      font-weight: 500;
+      color: #343a40;
+    }
+
+    #applyFilterBtn, #resetFilterBtn {
+      font-weight: 500;
+    }
   </style>
 </head>
 <body>

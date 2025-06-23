@@ -7,12 +7,15 @@ import com.example.spring.dto.cart.CartResponseDto;
 import com.example.spring.entity.User;
 import com.example.spring.service.busket.CartService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.AccessDeniedException;
 import java.util.Map;
 
 @RestController
@@ -21,7 +24,7 @@ import java.util.Map;
 public class CartController {
 
     private final CartService cartService;
-
+    private static final Logger logger = LoggerFactory.getLogger(CartController.class);
     /**
      * Endpoint for displaying cart contents with pagination and optional filtering by product name.
      * When first called (without productName parameter), it returns all items in the cart.
@@ -122,6 +125,31 @@ public class CartController {
             return ResponseEntity.status(401).build();
         }
     }
+
+
+    @PutMapping("/update-selection")
+    public ResponseEntity<Void> updateCartItemSelection(
+            @AuthenticationPrincipal User currentUser, // <-- ДОБАВЛЕНО
+            @RequestParam Long productId,
+            @RequestParam boolean selected) {
+        // Проверка на null, если пользователь может быть не аутентифицирован
+        if (currentUser == null) {
+            logger.warn("Unauthorized attempt to update cart selection for productId: {}", productId);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401 Unauthorized
+        }
+
+        logger.info("Attempting to update selection for userId: {} productId: {} to selected: {}", currentUser.getId(), productId, selected);
+        try {
+            // ПЕРЕДАЙТЕ currentUser в сервис
+            cartService.updateCartItemSelection(currentUser, productId, selected);
+            logger.info("Successfully updated selection for userId: {} productId: {}", currentUser.getId(), productId);
+            return ResponseEntity.ok().build();
+        }  catch (Exception e) {
+            logger.error("Error updating selection for userId: {} productId: {}. Error: {}", currentUser.getId(), productId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     @PostMapping("/purchase")
     public ResponseEntity<CartResponseDto> purchaseCart(
             @AuthenticationPrincipal User currentUser) {
@@ -141,10 +169,10 @@ public class CartController {
                // HttpStatus status = ((org.springframework.web.server.ResponseStatusException) e).getStatusCode();
                 String reason = ((org.springframework.web.server.ResponseStatusException) e).getReason();
                 // Возвращаем статус ошибки, который был выброшен из сервиса
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new CartResponseDto(null, null, null, null, 0));
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new CartResponseDto(null, null, null, null, 0, null));
             }
             // Для других ошибок
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new CartResponseDto(null, null, null, null, 0));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new CartResponseDto(null, null, null, null, 0, null));
         }
     }
 }

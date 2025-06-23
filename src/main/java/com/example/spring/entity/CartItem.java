@@ -26,6 +26,9 @@ public class CartItem {
 
     private Integer quantity;
 
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private boolean selected;
+
 private BigDecimal TotalPrice(){
     if(product!=null && product.getPrice()!=null && quantity!=null){
         return  product.getPrice().multiply(BigDecimal.valueOf(quantity));

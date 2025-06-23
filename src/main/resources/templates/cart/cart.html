@@ -6,90 +6,9 @@
   <title>Ваша Корзина</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛒</text></svg>">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-  <style>
-    body { font-family: Arial, sans-serif; }
-    .container { max-width: 900px; margin: auto; }
-    .main-content { padding-top: 70px; padding-bottom: 50px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #dee2e6; padding: 12px; text-align: left; vertical-align: middle; }
-    th { background-color: #e9ecef; }
-    .cart-summary {
-      margin-top: 30px;
-      padding: 20px;
-      border: 1px solid #ced4da;
-      border-radius: 8px;
-      background-color: #f8f9fa;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    }
-    .cart-summary h2 {
-      color: #007bff;
-      margin-bottom: 20px;
-      font-weight: bold;
-    }
-    .cart-summary p {
-      font-size: 1.1rem;
-      margin-bottom: 10px;
-    }
-    .cart-summary p span {
-      font-weight: bold;
-      color: #343a40;
-    }
-    .cart-item-image {
-      width: 80px;
-      height: 80px;
-      object-fit: contain;
-      border-radius: 5px;
-      vertical-align: middle;
-    }
-    .update-quantity-form {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-    .update-quantity-form input[type="number"] {
-      width: 70px;
-      text-align: center;
-    }
-    .loading {
-      display: none;
-      margin-left: 10px;
-      color: #0d6efd;
-    }
-    .empty-cart-message {
-      text-align: center;
-      padding: 50px;
-      font-size: 1.2rem;
-      color: #6c757d;
-      background-color: #e9ecef;
-      border-radius: 8px;
-      margin-top: 30px;
-    }
-    .alert {
-      padding: 10px;
-      margin-bottom: 15px;
-      border-radius: 5px;
-      font-weight: bold;
-    }
-    .alert.success {
-      background-color: #d4edda;
-      color: #155724;
-      border-color: #c3e6cb;
-    }
-    .alert.danger {
-      background-color: #f8d7da;
-      color: #721c24;
-      border-color: #f5c6cb;
-    }
-    .cart-counter {
-      background-color: red;
-      color: white;
-      border-radius: 50%;
-      padding: 2px 6px;
-      font-size: 0.75em;
-      vertical-align: super;
-      margin-left: -8px; /* Немного смещаем влево для наложения */
-    }
-  </style>
+  <meta name="_csrf" th:content="${_csrf.token}" th:if="${_csrf}" />
+  <meta name="_csrf_header" th:content="${_csrf.headerName}" th:if="${_csrf}" />
+  <link rel="stylesheet" th:href="@{/css/busket.css}">
 </head>
 <body>
 
@@ -133,15 +52,13 @@
 
     <div id="alert-message" class="mb-3" style="display: none;"></div>
 
-    <div class="cart-summary" th:if="${cartSummary != null}">
-      <h2>Сводка по Корзине</h2>
-      <p>Общее количество товаров: <span id="total-quantity" th:text="${cartSummary.totalQuantity}">0</span></p>
-      <p>Общая стоимость: <span id="total-cost" th:text="${#numbers.formatDecimal(cartSummary.totalCost, 0, 'COMMA', 2, 'POINT')}">0.00</span> MDL</p>
+    <div class="cart-summary">
+      <h2>Сводка по Выбранным Товарам</h2>
+      <p>Общее количество выбранных товаров: <span id="selected-total-quantity">0</span></p>
+      <p>Общая стоимость выбранных товаров: <span id="selected-total-cost">0.00</span> MDL</p>
       <div class="mt-3">
-        <button type="button" id="purchaseButton" class="btn btn-success btn-lg"
-                th:classappend="${cartSummary.totalQuantity == 0 ? 'disabled' : ''}"
-                onclick="purchaseCart()">
-          Купить сейчас
+        <button type="button" id="purchaseSelectedButton" class="btn btn-success btn-lg disabled" onclick="purchaseSelectedItems()">
+          Купить выбранные
         </button>
       </div>
     </div>
@@ -149,14 +66,17 @@
     <hr class="my-4"/>
 
     <div id="cart-items-container">
-      <div th:if="${cartItemsPage.content.isEmpty()}" id="empty-cart-message" class="empty-cart-message">
+      <div th:if="${cartItemsPage.content.isEmpty()}" id="empty-cart-message" class="empty-cart-message" style="display: block;">
         <p>Ваша корзина пуста или товары не соответствуют вашему фильтру.</p>
       </div>
 
-      <div th:unless="${cartItemsPage.content.isEmpty()}" id="actual-cart-table-wrapper">
+      <div th:unless="${cartItemsPage.content.isEmpty()}" id="actual-cart-table-wrapper" style="display: block;">
         <table class="table table-hover align-middle">
           <thead>
           <tr>
+            <th>
+              <input type="checkbox" id="selectAllItemsCheckbox" onclick="toggleSelectAll(this)"/>
+            </th>
             <th>Товар</th>
             <th>Изображение</th>
             <th>Цена</th>
@@ -166,44 +86,11 @@
           </tr>
           </thead>
           <tbody id="cart-table-body">
-          <tr th:each="item : ${cartItemsPage.content}" th:id="'cart-item-' + ${item.productId}">
-            <td th:text="${item.productName}">Название товара</td>
-            <td>
-              <img th:if="${item.productImage != null and item.productImage.length() > 0}"
-                   th:src="${item.productImage}" alt="Изображение товара" class="cart-item-image"/>
-              <span th:unless="${item.productImage != null and item.productImage.length() > 0}">Нет изображения</span>
-            </td>
-            <td th:text="${#numbers.formatDecimal(item.productPrice, 0, 'COMMA', 2, 'POINT')}">10.00 MDL</td>
-            <td>
-              <form class="update-quantity-form" th:data-product-id="${item.productId}" onsubmit="updateCartItem(event)">
-                <input type="number" name="quantity" th:value="${item.quantity}" min="0" class="form-control"/>
-                <button type="submit" class="btn btn-warning btn-sm">Обновить</button>
-                <span class="loading spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-              </form>
-            </td>
-            <td class="item-total" th:text="${#numbers.formatDecimal(item.itemTotal, 0, 'COMMA', 2, 'POINT')}">20.00 MDL</td>
-            <td>
-              <form class="remove-item-form" th:data-product-id="${item.productId}" onsubmit="removeCartItem(event)">
-                <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
-                <span class="loading spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-              </form>
-            </td>
-          </tr>
           </tbody>
         </table>
 
         <nav aria-label="Cart Page Navigation" class="mt-4">
           <ul class="pagination justify-content-center" id="paginationControls">
-            <li class="page-item" th:classappend="${cartItemsPage.hasPrevious() ? '' : 'disabled'}">
-              <a class="page-link" href="#" onclick="changePage(event, -1)">Предыдущая</a>
-            </li>
-            <li class="page-item" th:each="i : ${#numbers.sequence(0, cartItemsPage.totalPages - 1)}"
-                th:classappend="${i eq cartItemsPage.number ? 'active' : ''}">
-              <a class="page-link" href="#" th:text="${i + 1}" onclick="changePage(event, this.textContent - 1)">1</a>
-            </li>
-            <li class="page-item" th:classappend="${cartItemsPage.hasNext() ? '' : 'disabled'}">
-              <a class="page-link" href="#" onclick="changePage(event, 1)">Следующая</a>
-            </li>
           </ul>
         </nav>
       </div>
@@ -218,17 +105,20 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 <script th:inline="javascript">
   /*<![CDATA[*/
   // Utility function to show alert messages
   function showAlert(message, type) {
     const alertBox = document.getElementById('alert-message');
-    alertBox.textContent = message;
-    alertBox.className = `alert ${type}`;
-    alertBox.style.display = 'block';
-    setTimeout(() => {
-      alertBox.style.display = 'none';
-    }, 5000);
+    if (alertBox) { // Проверка на null
+      alertBox.textContent = message;
+      alertBox.className = `alert alert-${type}`; // Использование классов Bootstrap для стилизации
+      alertBox.style.display = 'block';
+      setTimeout(() => {
+        alertBox.style.display = 'none';
+      }, 5000);
+    }
   }
 
   // Helper function to format numbers
@@ -237,76 +127,192 @@
     return number.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
+  // --- Get CSRF Token and Header Name ---
+  const csrfToken = document.querySelector("meta[name='_csrf']") ? document.querySelector("meta[name='_csrf']").getAttribute("content") : null;
+  const csrfHeader = document.querySelector("meta[name='_csrf_header']") ? document.querySelector("meta[name='_csrf_header']").getAttribute("content") : null;
+
+  function getHeaders() {
+    const headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    };
+    if (csrfToken && csrfHeader) {
+      headers[csrfHeader] = csrfToken;
+    }
+    return headers;
+  }
+
+  // Глобальная переменная для хранения текущих элементов корзины
+  let currentCartItems = [];
+  let currentPage = /*[[${cartItemsPage.number}]]*/ 0;
+  let totalPages = /*[[${cartItemsPage.totalPages}]]*/ 0;
+  const pageSize = /*[[${cartItemsPage.size}]]*/ 10; // Размер страницы из Thymeleaf
+
+  document.addEventListener('DOMContentLoaded', function() {
+    updateCartItemCount();
+    // Инициализируем currentCartItems данными с сервера при загрузке страницы
+    // Важно: Thymeleaf уже возвращает CartItemDto, который содержит поле 'selected' из БД
+    currentCartItems = /*[[${cartItemsPage.content}]]*/ [];
+
+    // Рендерим элементы корзины и обновляем сводку
+    renderCartItems(currentCartItems);
+    updateSelectedSummary();
+    updatePaginationControls(currentPage, totalPages); // Обновляем элементы пагинации
+  });
+
+  // --- НОВАЯ ФУНКЦИЯ: Обновление состояния выбранности товара в корзине ---
+  async function handleItemSelectionChange(checkbox) {
+    const productId = parseInt(checkbox.getAttribute('data-product-id'));
+    const selected = checkbox.checked; // true if checked, false if unchecked
+
+    try {
+      const response = await fetch(`/api/v1/cart/update-selection?productId=${productId}&selected=${selected}`, {
+        method: 'PUT',
+        headers: getHeaders()
+      });
+
+      if (response.ok) {
+        // Обновляем локальное состояние 'selected' в global currentCartItems
+        const itemToUpdate = currentCartItems.find(item => item.productId === productId);
+        if (itemToUpdate) {
+          itemToUpdate.selected = selected;
+        }
+        updateSelectedSummary(); // Обновляем сводку на фронтенде
+        // showAlert('Состояние выбора товара обновлено!', 'success'); // Можно убрать для меньшей навязчивости
+      } else {
+        const errorData = await response.json().catch(() => ({ message: 'Неизвестная ошибка' }));
+        showAlert(`Ошибка при обновлении выбора: ${errorData.message || response.statusText}`, 'danger');
+        // Если что-то пошло не так, откатываем состояние чекбокса на фронтенде
+        checkbox.checked = !selected;
+      }
+    } catch (error) {
+      showAlert('Произошла ошибка сети при обновлении выбора.', 'danger');
+      console.error('Error updating item selection:', error);
+      checkbox.checked = !selected; // Откатываем состояние чекбокса
+    }
+  }
+
+  // --- Select All Checkbox Logic ---
+  async function toggleSelectAll(sourceCheckbox) {
+    const checkboxes = document.querySelectorAll('.item-checkbox');
+    const newSelectedState = sourceCheckbox.checked;
+
+    const promises = [];
+    checkboxes.forEach(checkbox => {
+      // Обновляем состояние чекбокса на фронтенде сразу
+      checkbox.checked = newSelectedState;
+
+      const productId = parseInt(checkbox.getAttribute('data-product-id'));
+      // Отправляем запрос на бэкенд для каждого элемента
+      promises.push(fetch(`/api/v1/cart/update-selection?productId=${productId}&selected=${newSelectedState}`, {
+        method: 'PUT',
+        headers: getHeaders()
+      }).then(response => {
+        if (!response.ok) {
+          console.error(`Failed to update selection for product ${productId}`);
+          // Здесь можно было бы обработать ошибку для конкретного элемента
+        }
+        // Обновляем global currentCartItems для этого элемента после успешного запроса
+        const itemToUpdate = currentCartItems.find(item => item.productId === productId);
+        if (itemToUpdate) {
+          itemToUpdate.selected = newSelectedState;
+        }
+      }).catch(error => {
+        console.error(`Network error updating selection for product ${productId}:`, error);
+      }));
+    });
+
+    // Ждем, пока все запросы завершатся
+    await Promise.allSettled(promises);
+    updateSelectedSummary(); // Обновляем сводку только после того, как все запросы отправлены и currentCartItems обновлены
+  }
+
+  // --- Update Selected Items Summary ---
+  function updateSelectedSummary() {
+    let totalSelectedQuantity = 0;
+    let totalSelectedCost = 0;
+    const allVisibleCheckboxes = document.querySelectorAll('.item-checkbox'); // Только видимые на текущей странице
+
+    allVisibleCheckboxes.forEach(checkbox => {
+      if (checkbox.checked) {
+        const productId = parseInt(checkbox.getAttribute('data-product-id'));
+        // Найдем соответствующий товар в currentCartItems, который должен содержать актуальное `selected`
+        const item = currentCartItems.find(i => i.productId === productId);
+        if (item) {
+          totalSelectedQuantity += item.quantity;
+          totalSelectedCost += (item.quantity * item.productPrice);
+        }
+      }
+    });
+
+    document.getElementById('selected-total-quantity').textContent = totalSelectedQuantity;
+    document.getElementById('selected-total-cost').textContent = formatDecimal(totalSelectedCost);
+
+    const purchaseSelectedButton = document.getElementById('purchaseSelectedButton');
+    if (totalSelectedQuantity > 0) {
+      purchaseSelectedButton.classList.remove('disabled');
+      purchaseSelectedButton.removeAttribute('disabled');
+    } else {
+      purchaseSelectedButton.classList.add('disabled');
+      purchaseSelectedButton.setAttribute('disabled', 'true');
+    }
+
+    const selectAllCheckbox = document.getElementById('selectAllItemsCheckbox');
+    if (selectAllCheckbox) {
+      // "Выбрать все" должен быть отмечен, если ВСЕ видимые чекбоксы отмечены.
+      // Если allVisibleCheckboxes.length === 0, то selectAllCheckbox должен быть снят.
+      selectAllCheckbox.checked = (allVisibleCheckboxes.length > 0 && Array.from(allVisibleCheckboxes).every(cb => cb.checked));
+    }
+  }
+
+
   // --- Start of updateCartItem function ---
   async function updateCartItem(event) {
-    event.preventDefault(); // Prevent default form submission
+    event.preventDefault();
     const form = event.target;
-    const productId = form.getAttribute('data-product-id');
+    const productId = parseInt(form.getAttribute('data-product-id'));
     const quantityInput = form.querySelector('input[name="quantity"]');
-    const quantity = parseInt(quantityInput.value); // Ensure quantity is an integer
+    const quantity = parseInt(quantityInput.value);
     const button = form.querySelector('button');
     const loading = form.querySelector('.loading');
 
-    // Basic validation for quantity
     if (isNaN(quantity) || quantity < 0) {
       showAlert('Количество должно быть числом и не меньше 0.', 'danger');
       return;
     }
 
-    button.disabled = true; // Disable button during request
-    loading.style.display = 'inline'; // Show loading indicator
+    button.disabled = true;
+    loading.style.display = 'inline';
 
     try {
       const response = await fetch('/api/v1/cart/update-quantity', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+        headers: getHeaders(),
         body: JSON.stringify({
-          productId: parseInt(productId),
+          productId: productId,
           quantity: quantity
         })
       });
 
       if (response.ok) {
-        const updatedCart = await response.json();
+        const updatedCartResponseDto = await response.json(); // Получаем CartResponseDto
+
         showAlert('Количество товара успешно обновлено!', 'success');
 
-        document.getElementById('total-quantity').textContent = updatedCart.totalQuantity;
-        document.getElementById('total-cost').textContent = formatDecimal(updatedCart.totalCost);
+        // Обновляем global currentCartItems на основе данных из CartResponseDto.cartItems
+        currentCartItems = updatedCartResponseDto.cartItems; // Теперь просто присваиваем
 
-        const row = document.getElementById('cart-item-' + productId);
-        const updatedItem = updatedCart.cartItems.find(item => item.productId == productId);
-
-        if (updatedItem && row) {
-          quantityInput.value = updatedItem.quantity;
-          row.querySelector('.item-total').textContent = formatDecimal(updatedItem.itemTotal);
-        }
-
-        if (updatedItem && updatedItem.quantity === 0 || !updatedItem) {
-          if (row) row.remove();
-        }
-
-        // ИЗМЕНЕНО: Проверка и удаление обёртки таблицы
-        if (updatedCart.totalQuantity === 0) {
-          const actualCartTableWrapper = document.getElementById('actual-cart-table-wrapper');
-          if (actualCartTableWrapper) actualCartTableWrapper.remove();
-          let emptyMessage = document.getElementById('empty-cart-message');
-          if (!emptyMessage) {
-            const cartItemsContainer = document.getElementById('cart-items-container');
-            if (cartItemsContainer) {
-              cartItemsContainer.innerHTML = '<div id="empty-cart-message" class="empty-cart-message"><p>Ваша корзина пуста или товары не соответствуют вашему фильтру.</p></div>';
-            }
-          } else {
-            emptyMessage.style.display = 'block';
-          }
-        }
-        updatePurchaseButtonState(); // Update button state after any cart modification
-
+        renderCartItems(currentCartItems);
+        updateSelectedSummary();
+        updateCartItemCount();
+        updatePaginationControls(currentPage, totalPages); // Обновляем на случай изменения количества страниц
       } else {
         const errorData = await response.json().catch(() => ({ message: 'Неизвестная ошибка' }));
         showAlert(`Ошибка при обновлении количества: ${errorData.message || response.statusText}`, 'danger');
+        if (response.status === 401 || response.status === 403) {
+          showAlert('Ваша сессия истекла или у вас нет прав. Пожалуйста, войдите снова.', 'danger');
+          setTimeout(() => window.location.href = '/login', 2000);
+        }
       }
     } catch (error) {
       showAlert('Произошла ошибка сети при обновлении количества.', 'danger');
@@ -322,7 +328,7 @@
   async function removeCartItem(event) {
     event.preventDefault();
     const form = event.target;
-    const productId = form.getAttribute('data-product-id');
+    const productId = parseInt(form.getAttribute('data-product-id'));
     const button = form.querySelector('button');
     const loading = form.querySelector('.loading');
 
@@ -336,40 +342,27 @@
     try {
       const response = await fetch(`/api/v1/cart/remove/${productId}`, {
         method: 'DELETE',
-        headers: {
-          'Accept': 'application/json',
-        }
+        headers: getHeaders()
       });
 
       if (response.ok) {
-        const updatedCart = await response.json();
+        const updatedCartResponseDto = await response.json(); // Получаем CartResponseDto
         showAlert('Товар успешно удален из корзины!', 'success');
 
-        const row = document.getElementById('cart-item-' + productId);
-        if (row) row.remove();
+        // Обновляем global currentCartItems на основе данных из CartResponseDto.cartItems
+        currentCartItems = updatedCartResponseDto.cartItems; // Теперь просто присваиваем
 
-        document.getElementById('total-quantity').textContent = updatedCart.totalQuantity;
-        document.getElementById('total-cost').textContent = formatDecimal(updatedCart.totalCost);
-
-        // ИЗМЕНЕНО: Проверка и удаление обёртки таблицы
-        if (updatedCart.totalQuantity === 0) {
-          const actualCartTableWrapper = document.getElementById('actual-cart-table-wrapper');
-          if (actualCartTableWrapper) actualCartTableWrapper.remove();
-          let emptyMessage = document.getElementById('empty-cart-message');
-          if (!emptyMessage) {
-            const cartItemsContainer = document.getElementById('cart-items-container');
-            if (cartItemsContainer) {
-              cartItemsContainer.innerHTML = '<div id="empty-cart-message" class="empty-cart-message"><p>Ваша корзина пуста или товары не соответствуют вашему фильтру.</p></div>';
-            }
-          } else {
-            emptyMessage.style.display = 'block';
-          }
-        }
-        updatePurchaseButtonState(); // Update button state after any cart modification
-
+        renderCartItems(currentCartItems);
+        updateSelectedSummary();
+        updateCartItemCount();
+        updatePaginationControls(currentPage, totalPages);
       } else {
         const errorData = await response.json().catch(() => ({ message: 'Неизвестная ошибка' }));
         showAlert(`Ошибка при удалении товара: ${errorData.message || response.statusText}`, 'danger');
+        if (response.status === 401 || response.status === 403) {
+          showAlert('Ваша сессия истекла или у вас нет прав. Пожалуйста, войдите снова.', 'danger');
+          setTimeout(() => window.location.href = '/login', 2000);
+        }
       }
     } catch (error) {
       showAlert('Произошла ошибка сети при удалении товара.', 'danger');
@@ -381,72 +374,48 @@
   }
   // --- End of removeCartItem function ---
 
-  // --- Новый JavaScript для кнопки покупки ---
-  document.addEventListener('DOMContentLoaded', function() {
-    updatePurchaseButtonState(); // Устанавливаем состояние кнопки при загрузке страницы
-    // Также убедитесь, что loadCartItems (если она у вас есть и используется для AJAX-обновления таблицы)
-    // вызывает updatePurchaseButtonState после загрузки данных.
-  });
+  // --- Purchase Selected Items function ---
+  async function purchaseSelectedItems() {
+    const purchaseButton = document.getElementById('purchaseSelectedButton');
+    // Мы не отправляем selectedProductIds, потому что бэкенд будет фильтровать по item.isSelected()
+    // based on the DB state.
+    // Если фронтенд и бэкенд синхронизированы, то currentCartItems.filter(item => item.selected)
+    // будет соответствовать selectedCartItems на бэкенде.
+    // Здесь мы просто проверяем, есть ли что-то выбранное на UI для активации кнопки.
+    const selectedCount = Array.from(document.querySelectorAll('.item-checkbox:checked')).length;
 
-  function updatePurchaseButtonState() {
-    const purchaseButton = document.getElementById('purchaseButton');
-    const totalQuantityElement = document.getElementById('total-quantity');
-    if (purchaseButton && totalQuantityElement) {
-      const totalQuantity = parseInt(totalQuantityElement.textContent);
-      if (totalQuantity === 0) {
-        purchaseButton.classList.add('disabled');
-        purchaseButton.setAttribute('disabled', 'true');
-      } else {
-        purchaseButton.classList.remove('disabled');
-        purchaseButton.removeAttribute('disabled');
-      }
+    if (selectedCount === 0) {
+      showAlert('Пожалуйста, выберите хотя бы один товар для покупки.', 'danger');
+      return;
     }
-  }
 
-  async function purchaseCart() {
-    const purchaseButton = document.getElementById('purchaseButton');
     purchaseButton.disabled = true;
     purchaseButton.textContent = 'Обработка покупки...';
 
     try {
+      // Нет необходимости отправлять body, т.к. бэкенд сам берет выбранные товары из корзины пользователя.
       const response = await fetch('/api/v1/cart/purchase', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-        }
+        method: 'POST', // POST, т.к. это действие с изменением состояния
+        headers: getHeaders()
       });
 
       if (response.ok) {
-        const updatedCart = await response.json();
-        showAlert('Покупка успешно оформлена! Ваша корзина очищена.', 'success');
+        const updatedCartResponseDto = await response.json();
+        showAlert('Выбранные товары успешно куплены! Корзина обновлена.', 'success');
 
-        document.getElementById('total-quantity').textContent = updatedCart.totalQuantity;
-        document.getElementById('total-cost').textContent = formatDecimal(updatedCart.totalCost);
+        // Обновляем global currentCartItems на основе ответа сервера
+        currentCartItems = updatedCartResponseDto.cartItems; // Присваиваем новые данные из DTO
 
-        // ИЗМЕНЕНО: Удаление обёртки таблицы
-        const actualCartTableWrapper = document.getElementById('actual-cart-table-wrapper');
-        if (actualCartTableWrapper) actualCartTableWrapper.remove();
-
-        let emptyMessage = document.getElementById('empty-cart-message');
-        if (!emptyMessage) {
-          const cartItemsContainer = document.getElementById('cart-items-container');
-          if (cartItemsContainer) {
-            cartItemsContainer.innerHTML = '<div id="empty-cart-message" class="empty-cart-message"><p>Ваша корзина пуста или товары не соответствуют вашему фильтру.</p></div>';
-          }
-        } else {
-          emptyMessage.style.display = 'block';
-        }
-
-        // Предполагаем, что у вас есть функция updateCartItemCount() для обновления счетчика в шапке
-        if (typeof updateCartItemCount === 'function') {
-          updateCartItemCount();
-        }
-        updatePurchaseButtonState(); // Обновляем состояние кнопки после покупки
+        renderCartItems(currentCartItems);
+        updateSelectedSummary();
+        updateCartItemCount();
+        updatePaginationControls(currentPage, totalPages);
       } else {
         const errorData = await response.json().catch(() => ({ message: 'Неизвестная ошибка' }));
-        showAlert(`Ошибка при покупке: ${errorData.message || response.statusText}`, 'danger');
+        showAlert(`Ошибка при покупке выбранных товаров: ${errorData.message || response.statusText}`, 'danger');
         if (response.status === 401 || response.status === 403) {
-          setTimeout(() => window.location.href = '/login', 2000); // Перенаправление на логин
+          showAlert('Ваша сессия истекла или у вас нет прав. Пожалуйста, войдите снова.', 'danger');
+          setTimeout(() => window.location.href = '/login', 2000);
         }
       }
     } catch (error) {
@@ -454,14 +423,176 @@
       console.error('Ошибка сети:', error);
     } finally {
       purchaseButton.disabled = false;
-      purchaseButton.textContent = 'Купить сейчас';
+      purchaseButton.textContent = 'Купить выбранные';
     }
   }
-  // --- Конец нового JavaScript для кнопки покупки ---
 
-  // Убедитесь, что updatePurchaseButtonState() вызывается после любых изменений корзины.
-  // Если у вас есть функции типа loadCartItems или аналогичные для полной перезагрузки/обновления таблицы корзины через AJAX,
-  // добавьте вызов updatePurchaseButtonState() в конце этих функций.
+  // --- Helper function to render cart items (Centralized rendering) ---
+  function renderCartItems(itemsToRender) {
+    const tableBody = document.getElementById('cart-table-body');
+    if (!tableBody) {
+      console.error("Элемент 'cart-table-body' не найден.");
+      return;
+    }
+    tableBody.innerHTML = '';
+
+    const emptyMessage = document.getElementById('empty-cart-message');
+    const actualCartTableWrapper = document.getElementById('actual-cart-table-wrapper');
+    // paginationControls больше не нужен здесь, он управляется updatePaginationControls
+
+    if (itemsToRender && itemsToRender.length > 0) {
+      itemsToRender.forEach(item => {
+        // Убедимся, что item.selected существует и используется
+        const isSelected = item.selected ? 'checked' : '';
+        const row = `
+          <tr id="cart-item-${item.productId}">
+            <td>
+              <input type="checkbox" class="item-checkbox" data-product-id="${item.productId}"
+                     data-product-price="${item.productPrice}" data-quantity="${item.quantity}"
+                     ${isSelected} onchange="handleItemSelectionChange(this)"/>
+            </td>
+            <td>${item.productName}</td>
+            <td>
+              ${item.productImage ? `<img src="${item.productImage}" alt="Изображение товара" class="cart-item-image"/>` : `<span>Нет изображения</span>`}
+            </td>
+            <td>${formatDecimal(item.productPrice)} MDL</td>
+            <td>
+              <form class="update-quantity-form" data-product-id="${item.productId}" onsubmit="updateCartItem(event)">
+                <input type="number" name="quantity" value="${item.quantity}" min="0" class="form-control"/>
+                <button type="submit" class="btn btn-warning btn-sm">Обновить</button>
+                <span class="loading spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              </form>
+            </td>
+            <td class="item-total">${formatDecimal(item.itemTotal)} MDL</td>
+            <td>
+              <form class="remove-item-form" data-product-id="${item.productId}" onsubmit="removeCartItem(event)">
+                <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
+                <span class="loading spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              </form>
+            </td>
+          </tr>
+        `;
+        tableBody.insertAdjacentHTML('beforeend', row);
+      });
+      if (emptyMessage) emptyMessage.style.display = 'none';
+      if (actualCartTableWrapper) actualCartTableWrapper.style.display = 'block';
+    } else {
+      if (emptyMessage) emptyMessage.style.display = 'block';
+      if (actualCartTableWrapper) actualCartTableWrapper.style.display = 'none';
+    }
+    updateSelectedSummary(); // Пересчитываем и обновляем сводку
+  }
+
+
+  // --- Cart Item Count in Header ---
+  async function updateCartItemCount() {
+    try {
+      const response = await fetch('/api/v1/cart/summary', {
+        method: 'GET',
+        headers: getHeaders()
+      });
+      if (response.ok && response.headers.get("Content-Length") !== "0") {
+        const cartSummary = await response.json();
+        const cartCountSpan = document.getElementById('cartItemCount');
+        if (cartCountSpan) {
+          if (cartSummary.totalQuantity > 0) {
+            cartCountSpan.textContent = cartSummary.totalQuantity;
+            cartCountSpan.classList.remove('d-none');
+          } else {
+            cartCountSpan.classList.add('d-none');
+          }
+        }
+      } else {
+        const cartCountSpan = document.getElementById('cartItemCount');
+        if (cartCountSpan) {
+          cartCountSpan.textContent = '0';
+          cartCountSpan.classList.add('d-none');
+        }
+        if (!response.ok) {
+          console.error('Failed to fetch cart summary:', response.status, response.statusText);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update cart count:', error);
+      const cartCountSpan = document.getElementById('cartItemCount');
+      if (cartCountSpan) {
+        cartCountSpan.textContent = '0';
+        cartCountSpan.classList.add('d-none');
+      }
+    }
+  }
+
+  // --- Pagination Logic ---
+  async function changePage(event, pageChange) {
+    event.preventDefault();
+
+    let newPage;
+    if (typeof pageChange === 'number') { // -1 for previous, 1 for next, relative to current
+      newPage = currentPage + pageChange;
+    } else { // Specific page number clicked (text content)
+      newPage = parseInt(pageChange); // Convert string to number
+    }
+
+    if (newPage < 0 || newPage >= totalPages) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/v1/cart/items?page=${newPage}&size=${pageSize}`, {
+        method: 'GET',
+        headers: getHeaders()
+      });
+
+      if (response.ok) {
+        const pageData = await response.json();
+        currentPage = pageData.number;
+        totalPages = pageData.totalPages;
+
+        // Важно: currentCartItems теперь напрямую присваивается из pageData.content
+        // CartItemDto уже содержит актуальное состояние 'selected' из БД
+        currentCartItems = pageData.content;
+
+        renderCartItems(currentCartItems);
+        updatePaginationControls(pageData.number, pageData.totalPages);
+
+      } else {
+        const errorData = await response.json().catch(() => ({ message: 'Неизвестная ошибка' }));
+        showAlert(`Ошибка при загрузке страницы: ${errorData.message || response.statusText}`, 'danger');
+        if (response.status === 401 || response.status === 403) {
+          showAlert('Ваша сессия истекла или у вас нет прав. Пожалуйста, войдите снова.', 'danger');
+          setTimeout(() => window.location.href = '/login', 2000);
+        }
+      }
+    } catch (error) {
+      showAlert('Произошла ошибка сети при загрузке страницы.', 'danger');
+      console.error('Error:', error);
+    }
+  }
+
+  function updatePaginationControls(currentPage, totalPages) {
+    const paginationControls = document.getElementById('paginationControls');
+    if (!paginationControls) return;
+
+    paginationControls.innerHTML = '';
+
+    if (totalPages <= 1) {
+      paginationControls.style.display = 'none';
+      return;
+    } else {
+      paginationControls.style.display = 'flex';
+    }
+
+    const prevClass = currentPage === 0 ? 'disabled' : '';
+    paginationControls.insertAdjacentHTML('beforeend', `<li class="page-item ${prevClass}"><a class="page-link" href="#" onclick="changePage(event, -1)">Предыдущая</a></li>`);
+
+    for (let i = 0; i < totalPages; i++) {
+      const activeClass = i === currentPage ? 'active' : '';
+      paginationControls.insertAdjacentHTML('beforeend', `<li class="page-item ${activeClass}"><a class="page-link" href="#" onclick="changePage(event, ${i})">${i + 1}</a></li>`);
+    }
+
+    const nextClass = currentPage === totalPages - 1 ? 'disabled' : '';
+    paginationControls.insertAdjacentHTML('beforeend', `<li class="page-item ${nextClass}"><a class="page-link" href="#" onclick="changePage(event, 1)">Следующая</a></li>`);
+  }
 
   /*]]>*/
 </script>

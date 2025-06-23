@@ -4,20 +4,31 @@ package com.example.spring.dto.cart;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.AllArgsConstructor; // Оставьте этот, он генерирует конструктор со всеми 6 полями
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor // Этот конструктор для всех 6 полей
 public class CartResponseDto {
-    private Long id;                  // ID of the cart itself
-    private Long userId;              // ID of the user this cart belongs to
-    private List<CartItemDto> cartItems; // List of all individual items in the cart
-    private BigDecimal totalCost;     // The sum of itemTotal for all cart items
-    private Integer totalQuantity;    // The sum of quantities for all cart items
+    private Long id;
+    private Long userId;
+    private List<CartItemDto> cartItems;
+    private BigDecimal totalCost;
+    private Integer totalQuantity;
+    private String errorMessage; // Это поле теперь должно быть
+
+    // --- ДОБАВЬТЕ ЭТОТ КОНСТРУКТОР ---
+    // Этот конструктор будет использоваться для успешных ответов (без errorMessage)
+    public CartResponseDto(Long id, Long userId, List<CartItemDto> cartItems, BigDecimal totalCost, Integer totalQuantity) {
+        this.id = id;
+        this.userId = userId;
+        this.cartItems = cartItems;
+        this.totalCost = totalCost;
+        this.totalQuantity = totalQuantity;
+        this.errorMessage = null; // По умолчанию null для успешных ответов
+    }
 }
