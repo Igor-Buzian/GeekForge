@@ -1,6 +1,6 @@
 package com.example.spring.service.product;
 
-import com.example.spring.dto.product.ProductFilterAdminDto;
+import com.example.spring.dto.search.ProductFilterAdminDto;
 import com.example.spring.entity.Product;
 import com.example.spring.entity.Category;
 import jakarta.persistence.criteria.CriteriaBuilder;

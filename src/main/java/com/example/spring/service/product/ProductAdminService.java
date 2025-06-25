@@ -1,7 +1,7 @@
 package com.example.spring.service.product;
 
 import com.example.spring.dto.product.ProductCreateDto;
-import com.example.spring.dto.product.ProductFilterAdminDto;
+import com.example.spring.dto.search.ProductFilterAdminDto;
 import com.example.spring.dto.product.ProductResponseDto;
 import com.example.spring.dto.product.ProductUpdateDto;
 import com.example.spring.entity.Category;

@@ -1,7 +1,6 @@
 package com.example.spring.controller;
 
-import com.example.spring.dto.product.ProductFilterAdminDto;
-import com.example.spring.dto.product.ProductFilterUserDto;
+import com.example.spring.dto.search.ProductFilterUserDto;
 import com.example.spring.service.product.ProductUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
