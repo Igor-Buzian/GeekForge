@@ -21,22 +21,22 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item">
-            <a class="nav-link" href="/admin/v1/category">Categories</a>
+            <a class="nav-link" href="/admin/v1/category">Categories Management</a>
           </li>
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle active" aria-current="page" href="#" id="navbarDropdownProducts" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              Products
+              Products Management
             </a>
             <ul class="dropdown-menu" aria-labelledby="navbarDropdownProducts">
               <li><a class="dropdown-item" href="/admin/v1/create">Create Product</a></li>
               <li><a class="dropdown-item" href="/admin/v1/update">Update Product</a></li>
               <li><a class="dropdown-item" href="/admin/v1/delete">Delete Product</a></li>
               <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="/admin/v1/list-products">List Products</a></li>
+              <li><a class="dropdown-item" href="/admin/v1/list-products">List All Products</a></li>
             </ul>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#">Users</a>
+            <a class="nav-link" href="#">Users Management</a>
           </li>
         </ul>
         <ul class="navbar-nav ms-auto">
@@ -64,13 +64,13 @@
         <div class="mb-3">
           <label for="productId" class="form-label">Product ID (to find and update):</label>
           <input type="number" class="form-control" id="productId" name="id" required placeholder="Enter existing product ID" min="1">
-          <div class="form-text text-muted">Введите точный ID продукта, который вы хотите обновить.</div>
+          <div class="form-text text-muted">Enter the exact ID of the product you wish to update.</div>
         </div>
 
         <div class="mb-3">
           <label for="newProductName" class="form-label">New Product Name (optional):</label>
           <input type="text" class="form-control" id="newProductName" name="newName" placeholder="Enter new product name">
-          <div class="form-text text-muted">Оставьте пустым, если не хотите менять название продукта.</div>
+          <div class="form-text text-muted">Leave empty if you don't want to change the product name.</div>
         </div>
 
         <div class="mb-3">
@@ -88,13 +88,14 @@
 
         <div class="mb-3">
           <label for="newProductImageFile" class="form-label">New Product Image (optional):</label>
-          <input type="file" class="form-control" id="newProductImageFile" name="imageFile"> <div class="form-text text-muted">Выберите новый файл изображения для загрузки. Это заменит существующее изображение.</div>
+          <input type="file" class="form-control" id="newProductImageFile" name="imageFile">
+          <div class="form-text text-muted">Select a new image file to upload. This will replace the existing image.</div>
         </div>
 
         <div class="mb-3">
           <label for="newCategoryNames" class="form-label">New Category Names (comma-separated, optional):</label>
           <input type="text" class="form-control" id="newCategoryNames" name="categoryNames" placeholder="e.g., UpdatedCategory, AnotherOne">
-          <div class="form-text text-muted">Разделяйте несколько названий категорий запятыми. Если указано, это заменит существующие категории.</div>
+          <div class="form-text text-muted">Separate multiple category names with commas. If specified, this will replace existing categories.</div>
         </div>
         <button type="submit" class="btn btn-warning w-100">Update Product</button>
       </form>
@@ -114,42 +115,49 @@
 
 <script>
   /**
-   * Вспомогательная функция для отображения ответа сервера.
-   * @param {string} elementId - ID DOM-элемента для вывода ответа.
-   * @param {object} response - Объект ответа, содержащий ok, status, statusText, data.
+   * Helper function to display server response.
+   * Displays the response in a designated div, styling it as success or error.
+   * It attempts to parse the response data as JSON for pretty printing.
+   * @param {string} elementId - ID of the DOM element to output the response.
+   * @param {object} response - Response object containing ok, status, statusText, data.
    */
   function displayResponse(elementId, response) {
     const responseDiv = document.getElementById(elementId);
-    responseDiv.classList.remove('success', 'error', 'd-none');
+    responseDiv.classList.remove('success', 'error', 'd-none'); // Clear previous states
 
     let contentToDisplay = response.data;
 
     if (response.ok) {
       responseDiv.classList.add('success');
       try {
+        // Attempt to parse data as JSON for pretty printing
         const parsedData = JSON.parse(response.data);
         contentToDisplay = JSON.stringify(parsedData, null, 2);
       } catch (e) {
-        console.warn(`Ответ для ${elementId} не является JSON, отображается как простой текст.`);
+        // If not JSON, display as plain text
+        console.warn(`Response for ${elementId} is not JSON, displaying as plain text.`);
       }
-      responseDiv.innerHTML = `<p class="fw-bold mb-1">Успех! HTTP ${response.status}</p><pre>${contentToDisplay || 'Нет содержимого ответа.'}</pre>`;
+      responseDiv.innerHTML = `<p class="fw-bold mb-1">Success! HTTP ${response.status}</p><pre>${contentToDisplay || 'No response content.'}</pre>`;
     } else {
       responseDiv.classList.add('error');
       try {
+        // Attempt to parse error data as JSON for pretty printing
         const parsedError = JSON.parse(response.data);
         contentToDisplay = JSON.stringify(parsedError, null, 2);
       } catch (e) {
-        console.warn(`Ответ об ошибке для ${elementId} не является JSON, отображается как простой текст.`);
+        // If not JSON, display as plain text
+        console.warn(`Error response for ${elementId} is not JSON, displaying as plain text.`);
       }
-      responseDiv.innerHTML = `<p class="fw-bold mb-1">Ошибка: HTTP ${response.status} ${response.statusText}</p><pre>${contentToDisplay || 'Нет тела ответа или неизвестная ошибка.'}</pre>`;
+      responseDiv.innerHTML = `<p class="fw-bold mb-1">Error: HTTP ${response.status} ${response.statusText}</p><pre>${contentToDisplay || 'No response body or unknown error.'}</pre>`;
     }
 
+    // Scroll the response into view for better user experience
     responseDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
-  // ОБРАБОТКА ФОРМЫ ОБНОВЛЕНИЯ ПРОДУКТА
+  // Handle the product update form submission
   document.getElementById('updateProductForm').addEventListener('submit', async function(event) {
-    event.preventDefault(); // Отменяем стандартную отправку формы
+    event.preventDefault(); // Prevent the default form submission
 
     const productId = document.getElementById('productId').value.trim();
     const newProductName = document.getElementById('newProductName').value.trim();
@@ -159,60 +167,75 @@
     const newProductImageFile = document.getElementById('newProductImageFile').files[0];
     const newCategoryNamesInput = document.getElementById('newCategoryNames').value.trim();
 
-    // Проверяем, что ID продукта введен и является положительным числом
+    // Client-side validation: Ensure Product ID is provided and is a positive number
     if (!productId || isNaN(productId) || parseInt(productId) <= 0) {
       displayResponse('updateProductResponse', {
-        ok: false, status: 'Ошибка валидации', statusText: 'Неверный ID продукта',
-        data: 'Пожалуйста, введите корректный положительный ID продукта, который вы хотите обновить.'
+        ok: false, status: 'Validation Error', statusText: 'Invalid Product ID',
+        data: 'Please enter a valid positive Product ID to update.'
       });
       return;
     }
 
+    // Create a FormData object to send multipart/form-data, which handles file uploads
     const formData = new FormData();
-    formData.append('id', productId);
+    formData.append('id', productId); // Always append the product ID
 
+    // Append optional fields only if they have values
     if (newProductName) formData.append('newName', newProductName);
     if (newDescription) formData.append('description', newDescription);
-    if (newPrice) formData.append('price', newPrice);
-    if (newQuantity) formData.append('quantity', newQuantity);
+
+    // Validate and append newPrice if provided
+    if (newPrice) {
+      const parsedPrice = parseFloat(newPrice);
+      if (isNaN(parsedPrice) || parsedPrice < 0) {
+        displayResponse('updateProductResponse', {
+          ok: false, status: 'Validation Error', statusText: 'Invalid Price',
+          data: 'New Price must be a non-negative number if provided.'
+        });
+        return;
+      }
+      formData.append('price', newPrice);
+    }
+
+    // Validate and append newQuantity if provided
+    if (newQuantity) {
+      const parsedQuantity = parseInt(newQuantity);
+      if (isNaN(parsedQuantity) || parsedQuantity < 0) {
+        displayResponse('updateProductResponse', {
+          ok: false, status: 'Validation Error', statusText: 'Invalid Quantity',
+          data: 'New Quantity must be a non-negative integer if provided.'
+        });
+        return;
+      }
+      formData.append('quantity', newQuantity);
+    }
+
+    // Append the image file if selected
     if (newProductImageFile) {
       formData.append('imageFile', newProductImageFile);
     }
 
-    // ИСПРАВЛЕННАЯ ЛОГИКА ДЛЯ categoryNames
+    // Process and append category names
     if (newCategoryNamesInput) {
+      // Split by comma, trim whitespace, and filter out empty strings
       const categoryNamesArray = newCategoryNamesInput.split(',')
               .map(name => name.trim())
-              .filter(name => name !== ''); // Удаляем пустые строки после обрезки
+              .filter(name => name !== '');
 
+      // Append each category name individually to FormData
       categoryNamesArray.forEach(name => {
         formData.append('categoryNames', name);
       });
-    } else {
-      // Если поле categoryNamesInput пустое, но вы хотите явно очистить категории на сервере,
-      // можно отправить пустую строку. В вашей Java-логике, если getCategoryNames() не null,
-      // но getCategoryNames().isEmpty() == true, то categories.removeAll(categories) выполнится.
-      // Чтобы это работало, вам нужно убедиться, что ProductUpdateDto.categoryNames
-      // может быть пустым Set, а не null.
-      // Если вы не хотите менять категории при пустом вводе, просто оставьте этот блок пустым.
-      // Текущая Java-логика (if (productUpdateDto.getCategoryNames()!=null && !productUpdateDto.getCategoryNames().isEmpty()))
-      // означает, что если categoryNames не прислан или пуст, категории не будут обновляться.
-      // Чтобы очистить категории, вам нужно, чтобы Set<Category> был пустым, но не null.
-      // Если вы отправляете пустую строку: formData.append('categoryNames', '');
-      // то в Java вы получите Set с одной пустой строкой, что не то, что нужно.
-      // Лучший способ для очистки - это либо отдельный флаг, либо убедиться,
-      // что ваш DTO принимает Set<String> и может быть создан с пустым Set.
-      // Пока оставляем так, что если поле пустое, категории не меняются.
     }
 
-    const url = '/product/v1/admin/update';
+    const url = '/product/v1/admin/update'; // The API endpoint for updating products
 
     try {
       const res = await fetch(url, {
-        method: 'PUT',
-        body: formData,
+        method: 'PUT', // Use PUT method for updates
+        body: formData, // FormData automatically sets the correct 'Content-Type' header for multipart/form-data
       });
-      const responseData = await res.text();
+      const responseData = await res.text(); // Get response as text to handle potential non-JSON errors
 
       displayResponse('updateProductResponse', {
         ok: res.ok,
@@ -221,15 +244,17 @@
         data: responseData
       });
 
+      // Optionally reset the form after a successful submission
       if (res.ok) {
-        this.reset(); // Сбросить форму после успешной отправки
+        this.reset();
       }
     } catch (error) {
+      // Handle network errors (e.g., server unreachable)
       displayResponse('updateProductResponse', {
         ok: false,
-        status: 'Сетевая ошибка',
+        status: 'Network Error',
         statusText: error.message,
-        data: `Не удалось подключиться к серверу. Проверьте ваше интернет-соединение или доступность сервера.`
+        data: `Could not connect to the server. Please check your internet connection or server availability.`
       });
     }
   });

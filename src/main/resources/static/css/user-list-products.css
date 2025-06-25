@@ -1,0 +1,123 @@
+/* ... ваш существующий CSS ... */
+.product-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.product-card img {
+    max-width: 100%;
+    height: 150px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto 15px;
+}
+.product-card .card-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+.product-card .card-text {
+    font-size: 0.9rem;
+    color: #555;
+    flex-grow: 1;
+    margin-bottom: 10px;
+}
+.product-card .price {
+    font-size: 1.1rem;
+    color: #007bff;
+    font-weight: bold;
+    margin-top: auto;
+}
+.product-card .btn-add-to-cart {
+    width: 100%;
+    margin-top: 10px;
+}
+.stock-indicator {
+    font-weight: bold;
+    margin-top: 5px;
+}
+.in-stock {
+    color: green;
+}
+.out-of-stock {
+    color: red;
+}
+.main-content {
+    padding-top: 70px;
+}
+.cart-counter {
+    background-color: red;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 0.75em;
+    vertical-align: super;
+    margin-left: -8px; /* Немного смещаем влево для наложения */
+}
+/* ... ваш существующий CSS ... */
+
+/* Улучшения для карточек товаров */
+.product-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.product-card:hover {
+    transform: translateY(-5px); /* Легкий подъем при наведении */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15); /* Увеличенная тень */
+}
+
+.product-card img {
+    border-bottom: 1px solid #eee; /* Небольшая граница под изображением */
+    padding-bottom: 15px; /* Отступ от границы */
+}
+
+.product-card .price {
+    color: #28a745; /* Используйте более яркий цвет, например, зеленый для цены */
+    font-size: 1.3rem; /* Чуть больший размер для цены */
+    margin-top: 15px; /* Отступ сверху */
+}
+
+/* Кнопка "Добавить в корзину" */
+.btn-add-to-cart {
+    font-weight: bold;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.btn-add-to-cart:hover:not(:disabled) {
+    background-color: #0056b3; /* Чуть темнее при наведении */
+}
+
+/* Для товаров "Нет в наличии" */
+.product-card.out-of-stock {
+    opacity: 0.7; /* Снизить прозрачность */
+    pointer-events: none; /* Отключить события мыши */
+}
+
+.product-card.out-of-stock .stock-indicator {
+    color: #dc3545; /* Четкий красный */
+    font-weight: bold;
+}
+
+/* Улучшения для навигации */
+.navbar-nav .nav-link {
+    transition: color 0.2s ease-in-out;
+}
+
+.navbar-nav .nav-link:hover {
+    color: rgba(255, 255, 255, 0.75); /* Немного светлее при наведении */
+}
+
+/* Улучшения для фильтров */
+.filter-section .form-label {
+    font-weight: 500;
+    color: #343a40;
+}
+
+#applyFilterBtn, #resetFilterBtn {
+    font-weight: 500;
+}

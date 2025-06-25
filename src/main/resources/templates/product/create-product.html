@@ -22,22 +22,22 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link" href="/admin/v1/category">Categories</a>
+                        <a class="nav-link" href="/admin/v1/category">Categories Management</a>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle active" aria-current="page" href="#" id="navbarDropdownProducts" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Products
+                            Products Management
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdownProducts">
                             <li><a class="dropdown-item" href="/admin/v1/create">Create Product</a></li>
                             <li><a class="dropdown-item" href="/admin/v1/update">Update Product</a></li>
                             <li><a class="dropdown-item" href="/admin/v1/delete">Delete Product</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/admin/v1/list-products">List Products</a></li>
+                            <li><a class="dropdown-item" href="/admin/v1/list-products">List All Products</a></li>
                         </ul>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Users</a>
+                        <a class="nav-link" href="#">Users Management</a>
                     </li>
                 </ul>
                 <ul class="navbar-nav ms-auto">
@@ -105,80 +105,108 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
 <script>
+    /**
+     * Displays an HTTP response message in a designated div, styling it as success or error.
+     * It attempts to parse the response data as JSON for pretty printing.
+     * @param {string} elementId - The ID of the div element to display the response in.
+     * @param {Object} response - An object containing response details (ok, status, statusText, data).
+     */
     function displayResponse(elementId, response) {
         const responseDiv = document.getElementById(elementId);
-        responseDiv.classList.remove('success', 'error', 'd-none');
+        responseDiv.classList.remove('success', 'error', 'd-none'); // Clear previous states
 
         let contentToDisplay = response.data;
 
         if (response.ok) {
             responseDiv.classList.add('success');
             try {
+                // Attempt to parse data as JSON for pretty printing
                 const parsedData = JSON.parse(response.data);
                 contentToDisplay = JSON.stringify(parsedData, null, 2);
             } catch (e) {
+                // If not JSON, display as plain text
                 console.warn(`Response for ${elementId} is not JSON, displaying as plain text.`);
             }
             responseDiv.innerHTML = `<p class="fw-bold mb-1">Success! HTTP ${response.status}</p><pre>${contentToDisplay || 'No response content.'}</pre>`;
         } else {
             responseDiv.classList.add('error');
             try {
+                // Attempt to parse error data as JSON for pretty printing
                 const parsedError = JSON.parse(response.data);
                 contentToDisplay = JSON.stringify(parsedError, null, 2);
             } catch (e) {
+                // If not JSON, display as plain text
                 console.warn(`Error response for ${elementId} is not JSON, displaying as plain text.`);
             }
             responseDiv.innerHTML = `<p class="fw-bold mb-1">Error: HTTP ${response.status} ${response.statusText}</p><pre>${contentToDisplay || 'No response body or unknown error.'}</pre>`;
         }
 
+        // Scroll the response into view for better user experience
         responseDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
-    // ИЗМЕНЕНИЕ 4: Модифицированный JavaScript для отправки MultipartFile
+    // Add event listener for the product creation form submission
     document.getElementById('createProductForm').addEventListener('submit', async function(event) {
-        event.preventDefault(); // Предотвращаем стандартную отправку формы
+        event.preventDefault(); // Prevent the default form submission
 
-        const form = this; // Ссылка на текущую форму
+        const form = this; // Reference to the form element
 
+        // Retrieve form input values
         const productName = form.elements['name'].value.trim();
         const productPrice = parseFloat(form.elements['price'].value);
         const productQuantity = parseInt(form.elements['quantity'].value);
-        const imageFile = form.elements['imageFile'].files[0]; // Получаем выбранный файл
+        const imageFile = form.elements['imageFile'].files[0]; // Get the selected file
         const categoryNamesInput = form.elements['categoryNames'].value.trim();
 
-        // Базовая валидация на фронтенде
-        if (!productName || isNaN(productPrice) || productPrice <= 0 || isNaN(productQuantity) || productQuantity < 0 || !imageFile) {
+        // Client-side validation
+        if (!productName) {
             displayResponse('createProductResponse', {
-                ok: false, status: 'Validation Error', statusText: 'Invalid input',
-                data: 'Please fill in all required fields correctly: Product Name, Price (positive number), Quantity (non-negative number), and an Image File.'
+                ok: false, status: 'Validation Error', statusText: 'Invalid Input',
+                data: 'Product Name cannot be empty.'
             });
-            return; // Прерываем отправку
+            return;
+        }
+        if (isNaN(productPrice) || productPrice <= 0) {
+            displayResponse('createProductResponse', {
+                ok: false, status: 'Validation Error', statusText: 'Invalid Input',
+                data: 'Price must be a positive number.'
+            });
+            return;
+        }
+        if (isNaN(productQuantity) || productQuantity < 0) {
+            displayResponse('createProductResponse', {
+                ok: false, status: 'Validation Error', statusText: 'Invalid Input',
+                data: 'Quantity must be a non-negative number.'
+            });
+            return;
+        }
+        if (!imageFile) {
+            displayResponse('createProductResponse', {
+                ok: false, status: 'Validation Error', statusText: 'Invalid Input',
+                data: 'Please select an image file.'
+            });
+            return;
         }
 
-        // FormData автоматически собирает все поля формы (включая файл) по их атрибутам 'name'
+        // FormData automatically collects all form fields (including the file) by their 'name' attributes.
         const formData = new FormData(form);
 
-        // Добавляем категории в FormData, если они есть.
-        // FormData будет отправлять их как строку.
-        // Если у вас на бэкенде ProductCreateDto ожидает Set<String>, то Spring сам спарсит.
-        // Или вы можете спарсить их на бэкенде вручную, как я показывал в контроллере.
-        // Удаляем старое поле 'categoryNames', если оно есть и не пустое, чтобы избежать дублирования
-        // if (categoryNamesInput) {
-        //     formData.delete('categoryNames'); // Удаляем, если оно уже было в форме
-        //     formData.append('categoryNames', categoryNamesInput); // Добавляем обработанную строку
-        // }
-
+        // If categoryNamesInput is provided, ensure it's handled correctly by FormData.
+        // FormData will send it as a string. Your backend Spring controller (e.g., @RequestParam String categoryNames)
+        // can then parse this comma-separated string into a Set<String> or List<String>.
+        // No explicit formData.append('categoryNames', ...) needed here if the input has `name="categoryNames"`.
 
         try {
-            // URL формы берется из th:action="@{/product/v1/admin/create}"
+            // The URL for the form submission is taken from th:action="@{/product/v1/admin/create}"
             const url = form.action;
 
             const res = await fetch(url, {
-                method: 'POST', // Используем POST для создания
-                body: formData // FormData отправляется как multipart/form-data
-                // Заголовок 'Content-Type' не указывается, браузер сам добавит 'multipart/form-data' с boundary
+                method: 'POST', // Use POST for creation
+                body: formData // FormData is sent as multipart/form-data
+                // The 'Content-Type' header is not set explicitly; the browser will automatically add 'multipart/form-data' with the correct boundary.
             });
-            const responseData = await res.text();
+
+            const responseData = await res.text(); // Get response as text to handle potential non-JSON errors
 
             displayResponse('createProductResponse', {
                 ok: res.ok,
@@ -187,25 +215,22 @@
                 data: responseData
             });
 
-            // Если успешно, можно сбросить форму
+            // If the product creation was successful, reset the form.
             if (res.ok) {
                 form.reset();
                 const fileInput = form.querySelector('input[type="file"]');
-                if (fileInput) fileInput.value = ''; // Сбросить input type="file"
+                if (fileInput) fileInput.value = ''; // Explicitly clear the file input
             }
         } catch (error) {
+            // Handle network errors
             displayResponse('createProductResponse', {
                 ok: false,
                 status: 'Network Error',
                 statusText: error.message,
-                data: `Could not connect to the server. Check your internet connection or server availability.`
+                data: `Could not connect to the server. Please check your internet connection or server availability.`
             });
         }
     });
-
-    // Удалите старую функцию sendRequest, если она больше не используется для отправки JSON-данных
-    // Если она используется для других частей вашего приложения, оставьте ее, но убедитесь,
-    // что логика создания продукта использует новый подход с FormData.
 </script>
 </body>
 </html>

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ваша Корзина</title>
+  <title>Your Cart</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛒</text></svg>">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
   <meta name="_csrf" th:content="${_csrf.token}" th:if="${_csrf}" />
@@ -15,30 +15,30 @@
 <header>
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
     <div class="container-fluid">
-      <a class="navbar-brand" href="/api/v1/user/all-products">Наш Магазин</a>
+      <a class="navbar-brand" href="/api/v1/user/all-products">Our Shop</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item">
-            <a class="nav-link" href="/api/v1/user/all-products">Товары</a>
+            <a class="nav-link" href="/api/v1/user/all-products">Products</a>
           </li>
           <li class="nav-item">
             <a class="nav-link active" aria-current="page" href="/cart">
-              Корзина <span id="cartItemCount" class="cart-counter d-none">0</span>
+              Cart <span id="cartItemCount" class="cart-counter d-none">0</span>
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/my-orders">Мои заказы</a>
+            <a class="nav-link" href="/my-orders">My Orders</a>
           </li>
         </ul>
         <ul class="navbar-nav ms-auto">
           <li class="nav-item">
-            <a class="nav-link" href="/login">Войти</a>
+            <a class="nav-link" href="/login">Log In</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/auth/v1/logout">Выйти</a>
+            <a class="nav-link" href="/auth/v1/logout">Log Out</a>
           </li>
         </ul>
       </div>
@@ -48,17 +48,17 @@
 
 <main class="main-content">
   <div class="container mt-5 pt-3">
-    <h1 class="mb-4 text-center text-primary">Ваша Корзина</h1>
+    <h1 class="mb-4 text-center text-primary">Your Cart</h1>
 
     <div id="alert-message" class="mb-3" style="display: none;"></div>
 
     <div class="cart-summary">
-      <h2>Сводка по Выбранным Товарам</h2>
-      <p>Общее количество выбранных товаров: <span id="selected-total-quantity">0</span></p>
-      <p>Общая стоимость выбранных товаров: <span id="selected-total-cost">0.00</span> MDL</p>
+      <h2>Summary of Selected Items</h2>
+      <p>Total selected items: <span id="selected-total-quantity">0</span></p>
+      <p>Total cost of selected items: <span id="selected-total-cost">0.00</span> MDL</p>
       <div class="mt-3">
         <button type="button" id="purchaseSelectedButton" class="btn btn-success btn-lg disabled" onclick="purchaseSelectedItems()">
-          Купить выбранные
+          Purchase Selected
         </button>
       </div>
     </div>
@@ -67,7 +67,7 @@
 
     <div id="cart-items-container">
       <div th:if="${cartItemsPage.content.isEmpty()}" id="empty-cart-message" class="empty-cart-message" style="display: block;">
-        <p>Ваша корзина пуста или товары не соответствуют вашему фильтру.</p>
+        <p>Your cart is empty or items do not match your filter.</p>
       </div>
 
       <div th:unless="${cartItemsPage.content.isEmpty()}" id="actual-cart-table-wrapper" style="display: block;">
@@ -77,12 +77,12 @@
             <th>
               <input type="checkbox" id="selectAllItemsCheckbox" onclick="toggleSelectAll(this)"/>
             </th>
-            <th>Товар</th>
-            <th>Изображение</th>
-            <th>Цена</th>
-            <th>Количество</th>
-            <th>Сумма</th>
-            <th>Действия</th>
+            <th>Product</th>
+            <th>Image</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Subtotal</th>
+            <th>Actions</th>
           </tr>
           </thead>
           <tbody id="cart-table-body">
@@ -101,19 +101,23 @@
 
 <footer class="footer mt-5 py-3 bg-light">
   <div class="container text-center">
-    <p>&copy; 2025 Ваш Магазин. Все права защищены.</p>
+    <p>&copy; 2025 Your Shop. All rights reserved.</p>
   </div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 <script th:inline="javascript">
   /*<![CDATA[*/
-  // Utility function to show alert messages
+  /**
+   * Displays a Bootstrap alert message.
+   * @param {string} message - The text content of the alert.
+   * @param {string} type - The Bootstrap alert type (e.g., 'success', 'danger', 'info', 'warning').
+   */
   function showAlert(message, type) {
     const alertBox = document.getElementById('alert-message');
-    if (alertBox) { // Проверка на null
+    if (alertBox) {
       alertBox.textContent = message;
-      alertBox.className = `alert alert-${type}`; // Использование классов Bootstrap для стилизации
+      alertBox.className = `alert alert-${type}`; // Use Bootstrap classes for styling
       alertBox.style.display = 'block';
       setTimeout(() => {
         alertBox.style.display = 'none';
@@ -121,16 +125,24 @@
     }
   }
 
-  // Helper function to format numbers
+  /**
+   * Helper function to format numbers to two decimal places.
+   * @param {number} number - The number to format.
+   * @returns {string} The formatted number string.
+   */
   function formatDecimal(number) {
     if (typeof number !== 'number') return '0.00';
     return number.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
-  // --- Get CSRF Token and Header Name ---
+  // --- Get CSRF Token and Header Name from meta tags ---
   const csrfToken = document.querySelector("meta[name='_csrf']") ? document.querySelector("meta[name='_csrf']").getAttribute("content") : null;
   const csrfHeader = document.querySelector("meta[name='_csrf_header']") ? document.querySelector("meta[name='_csrf_header']").getAttribute("content") : null;
 
+  /**
+   * Returns a headers object, including CSRF token if available.
+   * @returns {Object} HTTP headers.
+   */
   function getHeaders() {
     const headers = {
       'Content-Type': 'application/json',
@@ -142,25 +154,29 @@
     return headers;
   }
 
-  // Глобальная переменная для хранения текущих элементов корзины
+  // Global variable to store current cart items, initialized from Thymeleaf model.
   let currentCartItems = [];
-  let currentPage = /*[[${cartItemsPage.number}]]*/ 0;
-  let totalPages = /*[[${cartItemsPage.totalPages}]]*/ 0;
-  const pageSize = /*[[${cartItemsPage.size}]]*/ 10; // Размер страницы из Thymeleaf
+  let currentPage = /*[[${cartItemsPage.number}]]*/ 0; // Current page index.
+  let totalPages = /*[[${cartItemsPage.totalPages}]]*/ 0; // Total number of pages.
+  const pageSize = /*[[${cartItemsPage.size}]]*/ 10; // Page size from Thymeleaf model.
 
   document.addEventListener('DOMContentLoaded', function() {
     updateCartItemCount();
-    // Инициализируем currentCartItems данными с сервера при загрузке страницы
-    // Важно: Thymeleaf уже возвращает CartItemDto, который содержит поле 'selected' из БД
+    // Initialize currentCartItems with server-side data on page load.
+    // Thymeleaf already provides CartItemDto, which includes the 'selected' field from the database.
     currentCartItems = /*[[${cartItemsPage.content}]]*/ [];
 
-    // Рендерим элементы корзины и обновляем сводку
+    // Render cart items and update the summary.
     renderCartItems(currentCartItems);
     updateSelectedSummary();
-    updatePaginationControls(currentPage, totalPages); // Обновляем элементы пагинации
+    updatePaginationControls(currentPage, totalPages); // Update pagination controls.
   });
 
-  // --- НОВАЯ ФУНКЦИЯ: Обновление состояния выбранности товара в корзине ---
+  /**
+   * Handles the change in selection state of a cart item checkbox.
+   * Updates the item's selection status on the backend.
+   * @param {HTMLInputElement} checkbox - The checkbox element that triggered the change.
+   */
   async function handleItemSelectionChange(checkbox) {
     const productId = parseInt(checkbox.getAttribute('data-product-id'));
     const selected = checkbox.checked; // true if checked, false if unchecked
@@ -172,47 +188,50 @@
       });
 
       if (response.ok) {
-        // Обновляем локальное состояние 'selected' в global currentCartItems
+        // Update the local 'selected' state in the global currentCartItems array.
         const itemToUpdate = currentCartItems.find(item => item.productId === productId);
         if (itemToUpdate) {
           itemToUpdate.selected = selected;
         }
-        updateSelectedSummary(); // Обновляем сводку на фронтенде
-        // showAlert('Состояние выбора товара обновлено!', 'success'); // Можно убрать для меньшей навязчивости
+        updateSelectedSummary(); // Update the summary on the frontend.
       } else {
-        const errorData = await response.json().catch(() => ({ message: 'Неизвестная ошибка' }));
-        showAlert(`Ошибка при обновлении выбора: ${errorData.message || response.statusText}`, 'danger');
-        // Если что-то пошло не так, откатываем состояние чекбокса на фронтенде
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        showAlert(`Error updating selection: ${errorData.message || response.statusText}`, 'danger');
+        // If something went wrong, revert the checkbox state on the frontend.
         checkbox.checked = !selected;
       }
     } catch (error) {
-      showAlert('Произошла ошибка сети при обновлении выбора.', 'danger');
+      showAlert('A network error occurred while updating the selection.', 'danger');
       console.error('Error updating item selection:', error);
-      checkbox.checked = !selected; // Откатываем состояние чекбокса
+      checkbox.checked = !selected; // Revert checkbox state.
     }
   }
 
-  // --- Select All Checkbox Logic ---
+  /**
+   * Toggles the selection state of all visible cart items.
+   * Sends a backend request for each item to update its selection status.
+   * @param {HTMLInputElement} sourceCheckbox - The "Select All" checkbox.
+   */
   async function toggleSelectAll(sourceCheckbox) {
     const checkboxes = document.querySelectorAll('.item-checkbox');
     const newSelectedState = sourceCheckbox.checked;
 
     const promises = [];
     checkboxes.forEach(checkbox => {
-      // Обновляем состояние чекбокса на фронтенде сразу
+      // Immediately update the checkbox state on the frontend.
       checkbox.checked = newSelectedState;
 
       const productId = parseInt(checkbox.getAttribute('data-product-id'));
-      // Отправляем запрос на бэкенд для каждого элемента
+      // Send a request to the backend for each item.
       promises.push(fetch(`/api/v1/cart/update-selection?productId=${productId}&selected=${newSelectedState}`, {
         method: 'PUT',
         headers: getHeaders()
       }).then(response => {
         if (!response.ok) {
           console.error(`Failed to update selection for product ${productId}`);
-          // Здесь можно было бы обработать ошибку для конкретного элемента
+          // Error handling for a specific item could be added here.
         }
-        // Обновляем global currentCartItems для этого элемента после успешного запроса
+        // Update the global currentCartItems for this item after a successful request.
         const itemToUpdate = currentCartItems.find(item => item.productId === productId);
         if (itemToUpdate) {
           itemToUpdate.selected = newSelectedState;
@@ -222,21 +241,24 @@
       }));
     });
 
-    // Ждем, пока все запросы завершатся
+    // Wait for all requests to complete.
     await Promise.allSettled(promises);
-    updateSelectedSummary(); // Обновляем сводку только после того, как все запросы отправлены и currentCartItems обновлены
+    updateSelectedSummary(); // Update the summary only after all requests are sent and currentCartItems is updated.
   }
 
-  // --- Update Selected Items Summary ---
+  /**
+   * Updates the summary section (total selected quantity and cost) based on the currently selected items.
+   * Also enables/disables the "Purchase Selected" button.
+   */
   function updateSelectedSummary() {
     let totalSelectedQuantity = 0;
     let totalSelectedCost = 0;
-    const allVisibleCheckboxes = document.querySelectorAll('.item-checkbox'); // Только видимые на текущей странице
+    const allVisibleCheckboxes = document.querySelectorAll('.item-checkbox'); // Only visible on the current page.
 
     allVisibleCheckboxes.forEach(checkbox => {
       if (checkbox.checked) {
         const productId = parseInt(checkbox.getAttribute('data-product-id'));
-        // Найдем соответствующий товар в currentCartItems, который должен содержать актуальное `selected`
+        // Find the corresponding item in currentCartItems, which should contain the actual `selected` state.
         const item = currentCartItems.find(i => i.productId === productId);
         if (item) {
           totalSelectedQuantity += item.quantity;
@@ -259,14 +281,17 @@
 
     const selectAllCheckbox = document.getElementById('selectAllItemsCheckbox');
     if (selectAllCheckbox) {
-      // "Выбрать все" должен быть отмечен, если ВСЕ видимые чекбоксы отмечены.
-      // Если allVisibleCheckboxes.length === 0, то selectAllCheckbox должен быть снят.
+      // "Select All" should be checked if ALL visible checkboxes are checked.
+      // If allVisibleCheckboxes.length === 0, the selectAllCheckbox should be unchecked.
       selectAllCheckbox.checked = (allVisibleCheckboxes.length > 0 && Array.from(allVisibleCheckboxes).every(cb => cb.checked));
     }
   }
 
 
-  // --- Start of updateCartItem function ---
+  /**
+   * Updates the quantity of a specific item in the cart via API.
+   * @param {Event} event - The form submission event.
+   */
   async function updateCartItem(event) {
     event.preventDefault();
     const form = event.target;
@@ -277,7 +302,7 @@
     const loading = form.querySelector('.loading');
 
     if (isNaN(quantity) || quantity < 0) {
-      showAlert('Количество должно быть числом и не меньше 0.', 'danger');
+      showAlert('Quantity must be a number and not less than 0.', 'danger');
       return;
     }
 
@@ -295,36 +320,38 @@
       });
 
       if (response.ok) {
-        const updatedCartResponseDto = await response.json(); // Получаем CartResponseDto
+        const updatedCartResponseDto = await response.json(); // Get CartResponseDto
 
-        showAlert('Количество товара успешно обновлено!', 'success');
+        showAlert('Product quantity successfully updated!', 'success');
 
-        // Обновляем global currentCartItems на основе данных из CartResponseDto.cartItems
-        currentCartItems = updatedCartResponseDto.cartItems; // Теперь просто присваиваем
+        // Update global currentCartItems based on data from CartResponseDto.cartItems
+        currentCartItems = updatedCartResponseDto.cartItems; // Now simply assign.
 
         renderCartItems(currentCartItems);
         updateSelectedSummary();
         updateCartItemCount();
-        updatePaginationControls(currentPage, totalPages); // Обновляем на случай изменения количества страниц
+        updatePaginationControls(currentPage, totalPages); // Update in case page count changes.
       } else {
-        const errorData = await response.json().catch(() => ({ message: 'Неизвестная ошибка' }));
-        showAlert(`Ошибка при обновлении количества: ${errorData.message || response.statusText}`, 'danger');
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        showAlert(`Error updating quantity: ${errorData.message || response.statusText}`, 'danger');
         if (response.status === 401 || response.status === 403) {
-          showAlert('Ваша сессия истекла или у вас нет прав. Пожалуйста, войдите снова.', 'danger');
+          showAlert('Your session has expired or you do not have permissions. Please log in again.', 'danger');
           setTimeout(() => window.location.href = '/login', 2000);
         }
       }
     } catch (error) {
-      showAlert('Произошла ошибка сети при обновлении количества.', 'danger');
+      showAlert('A network error occurred while updating the quantity.', 'danger');
       console.error('Error:', error);
     } finally {
       button.disabled = false;
       loading.style.display = 'none';
     }
   }
-  // --- End of updateCartItem function ---
 
-  // --- Start of removeCartItem function ---
+  /**
+   * Removes a specific item from the cart via API.
+   * @param {Event} event - The form submission event.
+   */
   async function removeCartItem(event) {
     event.preventDefault();
     const form = event.target;
@@ -332,7 +359,7 @@
     const button = form.querySelector('button');
     const loading = form.querySelector('.loading');
 
-    if (!confirm('Вы уверены, что хотите удалить этот товар из корзины?')) {
+    if (!confirm('Are you sure you want to remove this item from your cart?')) {
       return;
     }
 
@@ -346,104 +373,108 @@
       });
 
       if (response.ok) {
-        const updatedCartResponseDto = await response.json(); // Получаем CartResponseDto
-        showAlert('Товар успешно удален из корзины!', 'success');
+        const updatedCartResponseDto = await response.json(); // Get CartResponseDto
+        showAlert('Product successfully removed from cart!', 'success');
 
-        // Обновляем global currentCartItems на основе данных из CartResponseDto.cartItems
-        currentCartItems = updatedCartResponseDto.cartItems; // Теперь просто присваиваем
+        // Update global currentCartItems based on data from CartResponseDto.cartItems
+        currentCartItems = updatedCartResponseDto.cartItems; // Now simply assign.
 
         renderCartItems(currentCartItems);
         updateSelectedSummary();
         updateCartItemCount();
         updatePaginationControls(currentPage, totalPages);
       } else {
-        const errorData = await response.json().catch(() => ({ message: 'Неизвестная ошибка' }));
-        showAlert(`Ошибка при удалении товара: ${errorData.message || response.statusText}`, 'danger');
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        showAlert(`Error removing product: ${errorData.message || response.statusText}`, 'danger');
         if (response.status === 401 || response.status === 403) {
-          showAlert('Ваша сессия истекла или у вас нет прав. Пожалуйста, войдите снова.', 'danger');
+          showAlert('Your session has expired or you do not have permissions. Please log in again.', 'danger');
           setTimeout(() => window.location.href = '/login', 2000);
         }
       }
     } catch (error) {
-      showAlert('Произошла ошибка сети при удалении товара.', 'danger');
+      showAlert('A network error occurred while removing the product.', 'danger');
       console.error('Error:', error);
     } finally {
       button.disabled = false;
       loading.style.display = 'none';
     }
   }
-  // --- End of removeCartItem function ---
 
-  // --- Purchase Selected Items function ---
+  /**
+   * Initiates the purchase process for selected items in the cart via API.
+   * Items are filtered by their 'selected' status on the backend.
+   */
   async function purchaseSelectedItems() {
     const purchaseButton = document.getElementById('purchaseSelectedButton');
-    // Мы не отправляем selectedProductIds, потому что бэкенд будет фильтровать по item.isSelected()
+    // We don't send selectedProductIds because the backend will filter by item.isSelected()
     // based on the DB state.
-    // Если фронтенд и бэкенд синхронизированы, то currentCartItems.filter(item => item.selected)
-    // будет соответствовать selectedCartItems на бэкенде.
-    // Здесь мы просто проверяем, есть ли что-то выбранное на UI для активации кнопки.
+    // If frontend and backend are synchronized, then currentCartItems.filter(item => item.selected)
+    // will correspond to selectedCartItems on the backend.
+    // Here we just check if anything is selected on the UI to activate the button.
     const selectedCount = Array.from(document.querySelectorAll('.item-checkbox:checked')).length;
 
     if (selectedCount === 0) {
-      showAlert('Пожалуйста, выберите хотя бы один товар для покупки.', 'danger');
+      showAlert('Please select at least one item to purchase.', 'danger');
       return;
     }
 
     purchaseButton.disabled = true;
-    purchaseButton.textContent = 'Обработка покупки...';
+    purchaseButton.textContent = 'Processing purchase...';
 
     try {
-      // Нет необходимости отправлять body, т.к. бэкенд сам берет выбранные товары из корзины пользователя.
+      // No need to send a body, as the backend retrieves selected items from the user's cart itself.
       const response = await fetch('/api/v1/cart/purchase', {
-        method: 'POST', // POST, т.к. это действие с изменением состояния
+        method: 'POST', // POST, as this is a state-changing action.
         headers: getHeaders()
       });
 
       if (response.ok) {
         const updatedCartResponseDto = await response.json();
-        showAlert('Выбранные товары успешно куплены! Корзина обновлена.', 'success');
+        showAlert('Selected items successfully purchased! Cart updated.', 'success');
 
-        // Обновляем global currentCartItems на основе ответа сервера
-        currentCartItems = updatedCartResponseDto.cartItems; // Присваиваем новые данные из DTO
+        // Update global currentCartItems based on the server response.
+        currentCartItems = updatedCartResponseDto.cartItems; // Assign new data from DTO.
 
         renderCartItems(currentCartItems);
         updateSelectedSummary();
         updateCartItemCount();
         updatePaginationControls(currentPage, totalPages);
       } else {
-        const errorData = await response.json().catch(() => ({ message: 'Неизвестная ошибка' }));
-        showAlert(`Ошибка при покупке выбранных товаров: ${errorData.message || response.statusText}`, 'danger');
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        showAlert(`Error purchasing selected items: ${errorData.message || response.statusText}`, 'danger');
         if (response.status === 401 || response.status === 403) {
-          showAlert('Ваша сессия истекла или у вас нет прав. Пожалуйста, войдите снова.', 'danger');
+          showAlert('Your session has expired or you do not have permissions. Please log in again.', 'danger');
           setTimeout(() => window.location.href = '/login', 2000);
         }
       }
     } catch (error) {
-      showAlert('Произошла ошибка сети при оформлении покупки.', 'danger');
-      console.error('Ошибка сети:', error);
+      showAlert('A network error occurred while processing the purchase.', 'danger');
+      console.error('Network error:', error);
     } finally {
       purchaseButton.disabled = false;
-      purchaseButton.textContent = 'Купить выбранные';
+      purchaseButton.textContent = 'Purchase Selected';
     }
   }
 
-  // --- Helper function to render cart items (Centralized rendering) ---
+  /**
+   * Renders the cart items in the table body.
+   * Hides/shows empty cart messages as appropriate.
+   * @param {Array<Object>} itemsToRender - An array of cart item objects to display.
+   */
   function renderCartItems(itemsToRender) {
     const tableBody = document.getElementById('cart-table-body');
     if (!tableBody) {
-      console.error("Элемент 'cart-table-body' не найден.");
+      console.error("Element 'cart-table-body' not found.");
       return;
     }
-    tableBody.innerHTML = '';
+    tableBody.innerHTML = ''; // Clear existing content.
 
     const emptyMessage = document.getElementById('empty-cart-message');
     const actualCartTableWrapper = document.getElementById('actual-cart-table-wrapper');
-    // paginationControls больше не нужен здесь, он управляется updatePaginationControls
 
     if (itemsToRender && itemsToRender.length > 0) {
       itemsToRender.forEach(item => {
-        // Убедимся, что item.selected существует и используется
-        const isSelected = item.selected ? 'checked' : '';
+        const isSelected = item.selected ? 'checked' : ''; // Check if item is selected.
         const row = `
           <tr id="cart-item-${item.productId}">
             <td>
@@ -453,20 +484,20 @@
             </td>
             <td>${item.productName}</td>
             <td>
-              ${item.productImage ? `<img src="${item.productImage}" alt="Изображение товара" class="cart-item-image"/>` : `<span>Нет изображения</span>`}
+              ${item.productImage ? `<img src="${item.productImage}" alt="Product Image" class="cart-item-image"/>` : `<span>No image</span>`}
             </td>
             <td>${formatDecimal(item.productPrice)} MDL</td>
             <td>
               <form class="update-quantity-form" data-product-id="${item.productId}" onsubmit="updateCartItem(event)">
                 <input type="number" name="quantity" value="${item.quantity}" min="0" class="form-control"/>
-                <button type="submit" class="btn btn-warning btn-sm">Обновить</button>
+                <button type="submit" class="btn btn-warning btn-sm">Update</button>
                 <span class="loading spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
               </form>
             </td>
             <td class="item-total">${formatDecimal(item.itemTotal)} MDL</td>
             <td>
               <form class="remove-item-form" data-product-id="${item.productId}" onsubmit="removeCartItem(event)">
-                <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
+                <button type="submit" class="btn btn-danger btn-sm">Remove</button>
                 <span class="loading spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
               </form>
             </td>
@@ -480,11 +511,13 @@
       if (emptyMessage) emptyMessage.style.display = 'block';
       if (actualCartTableWrapper) actualCartTableWrapper.style.display = 'none';
     }
-    updateSelectedSummary(); // Пересчитываем и обновляем сводку
+    updateSelectedSummary(); // Recalculate and update the summary.
   }
 
 
-  // --- Cart Item Count in Header ---
+  /**
+   * Fetches the cart summary from the API and updates the cart item count in the header.
+   */
   async function updateCartItemCount() {
     try {
       const response = await fetch('/api/v1/cart/summary', {
@@ -522,7 +555,11 @@
     }
   }
 
-  // --- Pagination Logic ---
+  /**
+   * Changes the current page of cart items and loads new data from the API.
+   * @param {Event} event - The click event from the pagination link.
+   * @param {number|string} pageChange - The page number to navigate to (0-indexed) or -1/1 for previous/next.
+   */
   async function changePage(event, pageChange) {
     event.preventDefault();
 
@@ -548,42 +585,47 @@
         currentPage = pageData.number;
         totalPages = pageData.totalPages;
 
-        // Важно: currentCartItems теперь напрямую присваивается из pageData.content
-        // CartItemDto уже содержит актуальное состояние 'selected' из БД
+        // Important: currentCartItems is now directly assigned from pageData.content.
+        // CartItemDto already contains the actual 'selected' state from the database.
         currentCartItems = pageData.content;
 
         renderCartItems(currentCartItems);
         updatePaginationControls(pageData.number, pageData.totalPages);
 
       } else {
-        const errorData = await response.json().catch(() => ({ message: 'Неизвестная ошибка' }));
-        showAlert(`Ошибка при загрузке страницы: ${errorData.message || response.statusText}`, 'danger');
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        showAlert(`Error loading page: ${errorData.message || response.statusText}`, 'danger');
         if (response.status === 401 || response.status === 403) {
-          showAlert('Ваша сессия истекла или у вас нет прав. Пожалуйста, войдите снова.', 'danger');
+          showAlert('Your session has expired or you do not have permissions. Please log in again.', 'danger');
           setTimeout(() => window.location.href = '/login', 2000);
         }
       }
     } catch (error) {
-      showAlert('Произошла ошибка сети при загрузке страницы.', 'danger');
+      showAlert('A network error occurred while loading the page.', 'danger');
       console.error('Error:', error);
     }
   }
 
+  /**
+   * Updates the pagination controls (Previous, page numbers, Next) based on current page and total pages.
+   * @param {number} currentPage - The current active page (0-indexed).
+   * @param {number} totalPages - The total number of pages.
+   */
   function updatePaginationControls(currentPage, totalPages) {
     const paginationControls = document.getElementById('paginationControls');
     if (!paginationControls) return;
 
-    paginationControls.innerHTML = '';
+    paginationControls.innerHTML = ''; // Clear existing pagination.
 
     if (totalPages <= 1) {
-      paginationControls.style.display = 'none';
+      paginationControls.style.display = 'none'; // Hide pagination if only one or zero pages.
       return;
     } else {
-      paginationControls.style.display = 'flex';
+      paginationControls.style.display = 'flex'; // Show pagination.
     }
 
     const prevClass = currentPage === 0 ? 'disabled' : '';
-    paginationControls.insertAdjacentHTML('beforeend', `<li class="page-item ${prevClass}"><a class="page-link" href="#" onclick="changePage(event, -1)">Предыдущая</a></li>`);
+    paginationControls.insertAdjacentHTML('beforeend', `<li class="page-item ${prevClass}"><a class="page-link" href="#" onclick="changePage(event, -1)">Previous</a></li>`);
 
     for (let i = 0; i < totalPages; i++) {
       const activeClass = i === currentPage ? 'active' : '';
@@ -591,7 +633,7 @@
     }
 
     const nextClass = currentPage === totalPages - 1 ? 'disabled' : '';
-    paginationControls.insertAdjacentHTML('beforeend', `<li class="page-item ${nextClass}"><a class="page-link" href="#" onclick="changePage(event, 1)">Следующая</a></li>`);
+    paginationControls.insertAdjacentHTML('beforeend', `<li class="page-item ${nextClass}"><a class="page-link" href="#" onclick="changePage(event, 1)">Next</a></li>`);
   }
 
   /*]]>*/

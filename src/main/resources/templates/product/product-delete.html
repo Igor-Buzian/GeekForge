@@ -21,22 +21,22 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item">
-            <a class="nav-link" href="/admin/v1/category">Categories</a>
+            <a class="nav-link" href="/admin/v1/category">Categories Management</a>
           </li>
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle active" aria-current="page" href="#" id="navbarDropdownProducts" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              Products
+              Products Management
             </a>
             <ul class="dropdown-menu" aria-labelledby="navbarDropdownProducts">
               <li><a class="dropdown-item" href="/admin/v1/create">Create Product</a></li>
               <li><a class="dropdown-item" href="/admin/v1/update">Update Product</a></li>
               <li><a class="dropdown-item" href="/admin/v1/delete">Delete Product</a></li>
               <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="/admin/v1/list-products">List Products</a></li>
+              <li><a class="dropdown-item" href="/admin/v1/list-products">List All Products</a></li>
             </ul>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#">Users</a>
+            <a class="nav-link" href="#">Users Management</a>
           </li>
         </ul>
         <ul class="navbar-nav ms-auto">
@@ -85,53 +85,65 @@
 <script>
   /**
    * Helper function to display server response.
+   * Displays the response in a designated div, styling it as success or error.
+   * It attempts to parse the response data as JSON for pretty printing.
    * @param {string} elementId - ID of the DOM element to output the response.
    * @param {object} response - Response object containing ok, status, statusText, data.
    */
   function displayResponse(elementId, response) {
     const responseDiv = document.getElementById(elementId);
-    responseDiv.classList.remove('success', 'error', 'd-none');
+    responseDiv.classList.remove('success', 'error', 'd-none'); // Clear previous states
 
     let contentToDisplay = response.data;
 
     if (response.ok) {
       responseDiv.classList.add('success');
       try {
+        // Attempt to parse data as JSON for pretty printing
         const parsedData = JSON.parse(response.data);
         contentToDisplay = JSON.stringify(parsedData, null, 2);
       } catch (e) {
+        // If not JSON, display as plain text
         console.warn(`Response for ${elementId} is not JSON, displaying as plain text.`);
       }
       responseDiv.innerHTML = `<p class="fw-bold mb-1">Success! HTTP ${response.status}</p><pre>${contentToDisplay || 'No response content.'}</pre>`;
     } else {
       responseDiv.classList.add('error');
       try {
+        // Attempt to parse error data as JSON for pretty printing
         const parsedError = JSON.parse(response.data);
         contentToDisplay = JSON.stringify(parsedError, null, 2);
       } catch (e) {
+        // If not JSON, display as plain text
         console.warn(`Error response for ${elementId} is not JSON, displaying as plain text.`);
       }
       responseDiv.innerHTML = `<p class="fw-bold mb-1">Error: HTTP ${response.status} ${response.statusText}</p><pre>${contentToDisplay || 'No response body or unknown error.'}</pre>`;
     }
 
+    // Scroll the response into view for better user experience
     responseDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   /**
    * Universal function for sending AJAX requests.
-   * @param {string} url - Endpoint URL.
-   * @param {string} method - HTTP method (POST, PUT, DELETE).
-   * @param {object|null} data - Data to send in the request body (for POST/PUT).
-   * @param {string} responseElementId - ID of the element to display the response.
+   * @param {string} url - The endpoint URL for the request.
+   * @param {string} method - The HTTP method (e.g., 'GET', 'POST', 'PUT', 'DELETE').
+   * @param {object|null} data - The data to send in the request body. Null for GET/DELETE without body.
+   * @param {string} responseElementId - The ID of the DOM element where the response feedback should be displayed.
    */
   async function sendRequest(url, method, data, responseElementId) {
     const responseDiv = document.getElementById(responseElementId);
-    responseDiv.classList.add('d-none'); // Hide previous response
+    if (responseDiv) {
+      responseDiv.classList.add('d-none'); // Hide previous response messages
+    }
 
     const options = {
       method: method,
       headers: {
         'Content-Type': 'application/json'
+        // Add CSRF token headers if your backend requires them for DELETE requests
+        // 'X-CSRF-TOKEN': document.querySelector("meta[name='_csrf']")?.getAttribute("content"),
+        // 'X-CSRF-HEADER': document.querySelector("meta[name='_csrf_header']")?.getAttribute("content")
       }
     };
 
@@ -141,7 +153,7 @@
 
     try {
       const res = await fetch(url, options);
-      const responseData = await res.text();
+      const responseData = await res.text(); // Get response as text to handle potential non-JSON errors
 
       displayResponse(responseElementId, {
         ok: res.ok,
@@ -150,35 +162,53 @@
         data: responseData
       });
     } catch (error) {
+      // Handle network-related errors (e.g., server unreachable)
       displayResponse(responseElementId, {
         ok: false,
         status: 'Network Error',
         statusText: error.message,
-        data: `Could not connect to the server. Check your internet connection or server availability.`
+        data: `Could not connect to the server. Please check your internet connection or server availability.`
       });
     }
   }
 
-  // DELETE PRODUCT FORM HANDLING
+  // Event listener for the delete product form submission
   document.getElementById('deleteProductForm').addEventListener('submit', async function(event) {
-    event.preventDefault(); // Prevent default form submission
+    event.preventDefault(); // Prevent the default form submission
 
-    const productId = document.getElementById('productIdToDelete').value.trim();
+    const productIdInput = document.getElementById('productIdToDelete');
+    const productId = productIdInput.value.trim();
 
-    if (!productId || isNaN(productId)) { // Check if it's empty or not a number
+    // Client-side validation: Check if input is empty or not a valid number
+    if (!productId || isNaN(productId)) {
       displayResponse('deleteProductResponse', {
-        ok: false, status: 'Validation Error', statusText: 'Invalid input',
-        data: 'Product ID cannot be empty and must be a number.'
+        ok: false,
+        status: 'Validation Error',
+        statusText: 'Invalid input',
+        data: 'Product ID cannot be empty and must be a valid number.'
       });
-      return;
+      return; // Stop execution if validation fails
     }
 
-    // Ensure this URL matches your actual product deletion API endpoint
-    // The ID is now passed directly in the URL path.
-    sendRequest(`/product/v1/admin/delete/${productId}`, 'DELETE', null, 'deleteProductResponse');
+    // Construct the URL for the DELETE request, embedding the product ID in the path
+    const url = `/product/v1/admin/delete/${productId}`;
 
-    // Optionally reset the form after submission
-    // this.reset();
+    // Confirm with the user before proceeding with deletion
+    if (confirm(`Are you sure you want to delete product with ID: ${productId}? This action cannot be undone.`)) {
+      await sendRequest(url, 'DELETE', null, 'deleteProductResponse'); // Send the DELETE request
+      // Optionally clear the input field after a successful deletion attempt
+      if (document.getElementById('deleteProductResponse').classList.contains('success')) {
+        productIdInput.value = '';
+      }
+    } else {
+      // User cancelled the deletion
+      displayResponse('deleteProductResponse', {
+        ok: false,
+        status: 'User Cancelled',
+        statusText: 'Deletion cancelled',
+        data: 'Product deletion was cancelled by the user.'
+      });
+    }
   });
 </script>
 </body>

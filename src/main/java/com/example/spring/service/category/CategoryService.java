@@ -29,7 +29,7 @@ public class CategoryService {
         category.setSlug(categoryCreateDto.getName().trim().toLowerCase().replaceAll("\\s+", "-"));
 
         categoryRepository.save(category);
-        // Возвращаем информацию о созданной категории в теле ответа
+        
         CategoryResponseDto responseDto = new CategoryResponseDto();
         responseDto.setId((long) category.getId()); // Предполагаем, что ID CategoryResponseDto имеет тип Long
         responseDto.setName(category.getName());
