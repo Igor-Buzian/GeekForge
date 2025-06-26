@@ -3,8 +3,11 @@ package com.example.spring.service.payment;
 
 import com.paypal.http.HttpResponse;
 import com.paypal.http.serializer.Json;
-import com.paypal.orders.*;
-import org.json.JSONObject;
+import com.paypal.orders.*; // <-- ЭТОТ ИМПОРТ ОЧЕНЬ ВАЖЕН! Он импортирует все классы Orders API V2.
+import com.paypal.core.PayPalHttpClient; // <-- Импорт PayPalHttpClient
+import com.paypal.core.PayPalEnvironment; // <-- Импорт PayPalEnvironment
+
+import org.json.JSONObject; // Для использования JSONObject
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -15,7 +18,7 @@ import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
-
+import java.util.stream.Collectors;
 @Service
 public class PayPalPaymentProcessor implements PaymentProcessor {
 

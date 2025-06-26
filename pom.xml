@@ -34,17 +34,30 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
 		</dependency>
-
+		<!-- https://mvnrepository.com/artifact/com.braintreepayments.api/paypal -->
+		<!-- Основная зависимость PayPal SDK -->
 		<dependency>
-			<groupId>com.paypal</groupId>
-			<artifactId>paypalhttp</artifactId>
-			<version>2.0.0</version>
+			<groupId>com.paypal.sdk</groupId>
+			<artifactId>checkout-sdk</artifactId>
+			<version>1.0.5</version>
+		</dependency>
+
+		<!-- Дополнительные зависимости для PayPal -->
+		<dependency>
+			<groupId>com.paypal.sdk</groupId>
+			<artifactId>rest-api-sdk</artifactId>
+			<version>1.14.0</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/com.paypal.sdk/paypal-core -->
 		<dependency>
 			<groupId>com.paypal.sdk</groupId>
 			<artifactId>paypal-core</artifactId>
 			<version>1.7.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.paypal</groupId>
+			<artifactId>paypalhttp</artifactId>
+			<version>1.0.1</version>
 		</dependency>
 
 			<dependency>
