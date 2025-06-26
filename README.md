@@ -40,21 +40,22 @@
 - `entity/` - JPA entities  
 - `exception/` - Custom exceptions  
 - `repository/` - Database access  
-- `service/` - Business logic  
+- `service/` - Business logic
+- `utils/` - Utils logic  
 
 ## ✨ Key Features
 
 ### 🔒 Security
 - **JWT Authentication** - Securely authenticates users using JSON Web Tokens, providing a stateless and scalable authentication mechanism.
 - **Brute Force Protection** - Account locking after N failed attempts  
-- **reCAPTCHA v3** - Bot prevention on auth endpoints  
+- **reCAPTCHA v2** - Bot prevention on auth endpoints  
 - **BCrypt Password Hashing** - Secure credential storage  
 - **RBAC** - Role-based access (USER/ADMIN) with Spring Security  
 - **HttpOnly Cookies** - XSS protection for JWT storage  
 
 ### 🏗️ Architecture  
 - **Clean Layers** - Controller → Service → Repository pattern  
-- **Spring Boot 3.1** - Auto-config, DI, Actuator  
+- **Spring Boot 3.4.4** - Auto-config, DI, Actuator  
 - **DTO Pattern** - Secure data transfer between layers  
 - **Custom Exceptions** - Unified error handling with `@ControllerAdvice`  
 - **JPA/Hibernate** - ORM with PostgreSQL support  
@@ -62,7 +63,6 @@
 
 ### ⚙️ Operational
 - **RESTful API** - HTTP standards compliant  
-- **Swagger UI** - Interactive API docs at `/swagger-ui`  
 - **SLF4J Logging** - Structured logs with MDC support  
 - **Stateless** - JWT-based session management  
 - **Cloud Ready** - 12-factor app configuration  
