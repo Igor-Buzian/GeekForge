@@ -1,100 +1,155 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-  <title>Login</title>
-  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login to Our Shop</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔑</text></svg>">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
   <style>
+    html{
+      height: 100%; /* Занимаем всю высоту viewport */
+      margin: 0;
+      padding: 0;
+    }
     body {
-      font-family: Arial, sans-serif;
-      max-width: 400px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    .error-message {
-      color: red;
-      margin-bottom: 15px;
-      padding: 10px;
-      border: 1px solid red;
-      border-radius: 4px;
-      background-color: #ffeeee;
-    }
-    form {
+      margin: 0;
+      padding: 0;
+      background-color: #f0f2f5;
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      gap: 15px;
     }
-    input {
+    .main-content {
+      flex-grow: 1;
+      display: flex;
+      align-items: center; /* Center vertically */
+      justify-content: center; /* Center horizontally */
+      padding: 20px; /* Add some padding */
+    }
+    .login-container {
+      max-width: 450px; /* Slightly wider for better form appearance */
+      width: 100%;
+      padding: 30px;
+      border: 1px solid #e9ecef;
+      border-radius: 12px;
+      background-color: #ffffff;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    }
+    .error-message {
+      color: #dc3545; /* Bootstrap danger color */
+      margin-bottom: 15px;
       padding: 10px;
-      border: 1px solid #ccc;
+      border: 1px solid #dc3545;
       border-radius: 4px;
+      background-color: #f8d7da; /* Light red background */
+      text-align: center;
     }
-    button {
-      padding: 10px;
-      background-color: #4CAF50;
+    .form-label {
+      font-weight: 500;
+      margin-bottom: 5px;
+    }
+    .g-recaptcha {
+      margin-top: 15px;
+      margin-bottom: 15px;
+      display: none; /* Hidden by default */
+      transform: scale(0.9); /* Slightly shrink recaptcha to fit better */
+      transform-origin: 0 0; /* Adjust origin for scaling */
+    }
+    /* Adjust button width to be full width */
+  .btn-login, .btn-register {
+      width: 100%;
+    }
+    .footer {
+      flex-shrink: 0;
+      background-color: #343a40;
       color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
+      padding: 1rem 0;
+      width: 100%;
     }
-    button:hover {
-      background-color: #45a049;
-    }
-    .register-button { /* New style for the register button */
-      background-color: #007bff; /* A different color for distinction */
-    }
-    .register-button:hover {
-      background-color: #0056b3;
-    }
-    #recaptcha-container {
-      margin: 15px 0;
-      display: none;
-    }
+
   </style>
 </head>
 <body>
-<h2>Login</h2>
 
-<div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></div>
+<header>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">Our Shop</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+      </div>
+    </div>
+  </nav>
+</header>
 
-<form id="loginForm">
-  <input type="email" name="email" placeholder="Email" required/>
-  <input type="password" name="password" placeholder="Password" required/>
+<main class="main-content">
+  <div class="login-container">
+    <h2 class="mb-4 text-center text-primary">Login to Your Account</h2>
 
-  <div id="recaptcha-container" class="g-recaptcha"
-       data-sitekey="6Lcjd0ArAAAAAAL3X5sQAsNtBpjr14Bqumz4cAy4"></div>
+    <div th:if="${errorMessage}" class="error-message" th:text="${errorMessage}"></div>
 
-  <button type="submit">Login</button>
-  <button type="button" class="register-button" onclick="window.location.href='/register'">Create Account</button>
-</form>
+    <form id="loginForm">
+      <div class="mb-3">
+        <label for="email" class="form-label">Email address</label>
+        <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" required>
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+      </div>
 
+      <div id="recaptcha-container" class="g-recaptcha"
+           data-sitekey="6Lcjd0ArAAAAAAL3X5sQAsNtBpjr14Bqumz4cAy4"></div>
+
+      <button type="submit" class="btn btn-primary btn-login mb-3">Login</button>
+      <button type="button" class="btn btn-secondary btn-register" onclick="window.location.href='/register'">Create Account</button>
+    </form>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container text-center">
+    <p>&copy; 2025 Our Shop. All rights reserved.</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eOzrKbVj4hW+ALEwIH" crossorigin="anonymous"></script>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <script th:inline="javascript">
   /*<![CDATA[*/
   document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('loginForm');
     const recaptchaContainer = document.getElementById('recaptcha-container');
-    const maxAttemptsBeforeCaptcha =   /*[[${captchaThreshold}]]*/ 2;
+    // The captchaThreshold value is passed from the Spring controller via Thymeleaf
+    const maxAttemptsBeforeCaptcha = /*[[${captchaThreshold}]]*/ 2;
 
-    // Проверяем количество попыток при загрузке страницы
+    // Check login attempts on page load to determine if CAPTCHA should be shown
     checkAttempts();
 
-    // Обработчик отправки формы
+    // Event listener for form submission
     form.addEventListener('submit', function(e) {
-      e.preventDefault();
+      e.preventDefault(); // Prevent default form submission
 
       const formData = new FormData(form);
       const email = formData.get('email');
       const password = formData.get('password');
-      const captchaResponse = formData.get('g-recaptcha-response');
+      // Retrieve reCAPTCHA response if the container is visible
+      const captchaResponse = recaptchaContainer.style.display === 'block' ? grecaptcha.getResponse() : '';
 
-      // Создаем URLSearchParams для отправки данных
       const params = new URLSearchParams();
       params.append('email', email);
       params.append('password', password);
+      // Only append captchaResponse if it's not empty
       if (captchaResponse) {
         params.append('g-recaptcha-response', captchaResponse);
       }
 
-      // Отправляем запрос
+      // Send the login request to the backend
       fetch('/auth/v1/authentication', {
         method: 'POST',
         headers: {
@@ -103,30 +158,64 @@
         body: params
       })
               .then(response => {
+                // If the backend sends a redirect, follow it
                 if (response.redirected) {
                   window.location.href = response.url;
                 }
-                return response;
+                // If not redirected, it means there's an error or specific response to handle
+                return response.json(); // Assuming your backend returns JSON for errors
+              })
+              .then(data => {
+                // Handle specific error messages from the backend
+                if (data.errorMessage) {
+                  const errorMessageDiv = document.querySelector('.error-message');
+                  if (errorMessageDiv) {
+                    errorMessageDiv.textContent = data.errorMessage;
+                    errorMessageDiv.style.display = 'block'; // Ensure error message is visible
+                  } else {
+                    // If no existing error div, create one (less likely with Thymeleaf initial render)
+                    const newErrorDiv = document.createElement('div');
+                    newErrorDiv.className = 'error-message';
+                    newErrorDiv.textContent = data.errorMessage;
+                    form.prepend(newErrorDiv); // Add above the form
+                  }
+                  // Reset CAPTCHA if it was shown (important for repeated failed attempts)
+                  if (recaptchaContainer.style.display === 'block') {
+                    grecaptcha.reset();
+                  }
+                  // After a failed attempt, re-check to potentially show/hide CAPTCHA
+                  checkAttempts();
+                }
               })
               .catch(error => {
                 console.error('Error:', error);
+                // Display a generic error message if fetch fails
+                const errorMessageDiv = document.querySelector('.error-message');
+                if (errorMessageDiv) {
+                  errorMessageDiv.textContent = 'An unexpected error occurred. Please try again.';
+                  errorMessageDiv.style.display = 'block';
+                }
               });
     });
 
-    // Функция проверки попыток входа
+    // Function to check login attempts from the backend
     function checkAttempts() {
       fetch('/auth/v1/login-attempts')
               .then(response => response.json())
               .then(data => {
-                const attempts = data.attempts || 0;
+                const attempts = data.attempts || 0; // Default to 0 if attempts is undefined
 
-                // Показываем CAPTCHA если попыток больше лимита
+                // Show CAPTCHA if attempts exceed the threshold
                 if (attempts >= maxAttemptsBeforeCaptcha) {
                   recaptchaContainer.style.display = 'block';
+                } else {
+                  recaptchaContainer.style.display = 'none'; // Hide CAPTCHA if below threshold
                 }
               })
               .catch(error => {
                 console.error('Error checking attempts:', error);
+                // In case of an error fetching attempts, it's safer to show CAPTCHA
+                recaptchaContainer.style.display = 'block';
               });
     }
   });

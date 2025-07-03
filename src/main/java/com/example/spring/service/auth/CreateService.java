@@ -78,7 +78,7 @@ public class CreateService {
         response.addCookie(cookie);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Location", "/success");
+        headers.add("Location", "/api/v1/user/all-products");
         return new ResponseEntity<>(headers, HttpStatus.SEE_OTHER);
     }
 }

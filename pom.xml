@@ -41,7 +41,12 @@
 			<artifactId>checkout-sdk</artifactId>
 			<version>1.0.5</version>
 		</dependency>
-
+		<!-- https://mvnrepository.com/artifact/com.stripe/stripe-java -->
+		<dependency>
+			<groupId>com.stripe</groupId>
+			<artifactId>stripe-java</artifactId>
+			<version>29.2.0</version>
+		</dependency>
 		<!-- Дополнительные зависимости для PayPal -->
 		<dependency>
 			<groupId>com.paypal.sdk</groupId>

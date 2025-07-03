@@ -86,7 +86,7 @@ public class AuthController {
      * @param response The HttpServletResponse.
      * @return A ResponseEntity indicating the success or failure of the logout.
      */
-    @PostMapping("/logout")
+    @GetMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response)
     {
         return authService.logout(response);

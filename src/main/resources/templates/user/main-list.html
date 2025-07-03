@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Наши Товары</title>
+  <title>Our Products</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛒</text></svg>">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
   <style>
@@ -13,14 +13,14 @@
       padding: 15px;
       margin-bottom: 20px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      height: 100%; /* Убедитесь, что карточки одинаковой высоты в ряду */
+      height: 100%; /* Ensure cards are of equal height in a row */
       display: flex;
       flex-direction: column;
     }
     .product-card img {
       max-width: 100%;
-      height: 150px; /* Фиксированная высота для изображения */
-      object-fit: contain; /* Чтобы изображение полностью помещалось */
+      height: 150px; /* Fixed height for image */
+      object-fit: contain; /* To ensure the image fits entirely */
       display: block;
       margin: 0 auto 15px;
     }
@@ -32,18 +32,18 @@
     .product-card .card-text {
       font-size: 0.9rem;
       color: #555;
-      flex-grow: 1; /* Чтобы описание занимало доступное пространство */
+      flex-grow: 1; /* So description takes up available space */
       margin-bottom: 10px;
     }
     .product-card .price {
       font-size: 1.1rem;
       color: #007bff;
       font-weight: bold;
-      margin-top: auto; /* Прикрепить цену и кнопку к низу карточки */
+      margin-top: auto; /* Pin price and button to the bottom of the card */
     }
     .product-card .btn-add-to-cart {
       width: 100%;
-      margin-top: 10px; /* Отступ от цены */
+      margin-top: 10px; /* Spacing from price */
     }
     .stock-indicator {
       font-weight: bold;
@@ -56,7 +56,7 @@
       color: red;
     }
     .main-content {
-      padding-top: 70px; /* Отступ сверху для фиксированной навигации */
+      padding-top: 70px; /* Top padding for fixed navigation */
     }
   </style>
 </head>
@@ -65,28 +65,27 @@
 <header>
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
     <div class="container-fluid">
-      <a class="navbar-brand" href="/">Наш Магазин</a>
+      <a class="navbar-brand" href="/">Our Shop</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="/products">Товары</a>
+            <a class="nav-link active" aria-current="page" href="/products">Products</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/templates/cart">Корзина</a>
+            <a class="nav-link" href="/templates/cart">Cart</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/my-orders">Мои заказы</a>
+            <a class="nav-link" href="/my-orders">My Orders</a>
           </li>
         </ul>
         <ul class="navbar-nav ms-auto">
           <li class="nav-item">
-            <a class="nav-link" href="/login">Войти</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/logout">Выйти</a>
+            <form id="logoutForm" action="/auth/v1/logout" method="post" style="display: inline;">
+              <button type="submit" class="nav-link" style="background: none; border: none; padding: .5rem 1rem; color: rgba(255,255,255,.55);">Log Out</button>
+            </form>
           </li>
         </ul>
       </div>
@@ -96,47 +95,47 @@
 
 <main class="main-content">
   <div class="container mt-5 pt-3">
-    <h1 class="mb-5 text-center text-primary">Наши Товары</h1>
+    <h1 class="mb-5 text-center text-primary">Our Products</h1>
 
     <div id="alertPlaceholder" class="mb-3"></div>
 
     <div class="filter-section mb-4 p-3 border rounded bg-light">
-      <h4 class="mb-3 text-secondary">Фильтры товаров</h4>
+      <h4 class="mb-3 text-secondary">Product Filters</h4>
       <form id="filterForm" class="row g-3 align-items-end">
         <div class="col-md-3">
-          <label for="filterProductName" class="form-label">Название товара</label>
+          <label for="filterProductName" class="form-label">Product Name</label>
           <input type="text" class="form-control" id="filterProductName" name="name">
         </div>
         <div class="col-md-2">
-          <label for="filterMinPrice" class="form-label">Мин. цена</label>
+          <label for="filterMinPrice" class="form-label">Min. Price</label>
           <input type="number" step="0.01" class="form-control" id="filterMinPrice" name="minPrice">
         </div>
         <div class="col-md-2">
-          <label for="filterMaxPrice" class="form-label">Макс. цена</label>
+          <label for="filterMaxPrice" class="form-label">Max. Price</label>
           <input type="number" step="0.01" class="form-control" id="filterMaxPrice" name="maxPrice">
         </div>
         <div class="col-md-3">
-          <label for="filterCategories" class="form-label">Категории (через запятую)</label>
+          <label for="filterCategories" class="form-label">Categories (comma-separated)</label>
           <input type="text" class="form-control" id="filterCategories" name="categoryNames">
         </div>
 
         <div class="col-md-2">
-          <label for="filterSortBy" class="form-label">Сортировать по</label>
+          <label for="filterSortBy" class="form-label">Sort By</label>
           <select class="form-select" id="filterSortBy" name="sortBy">
-            <option value="name">Названию</option>
-            <option value="price">Цене</option>
-            <option value="createdAt">Дате добавления</option>
+            <option value="name">Name</option>
+            <option value="price">Price</option>
+            <option value="createdAt">Date Added</option>
           </select>
         </div>
         <div class="col-md-2">
-          <label for="filterSortDirection" class="form-label">Порядок</label>
+          <label for="filterSortDirection" class="form-label">Order</label>
           <select class="form-select" id="filterSortDirection" name="sortDirection">
-            <option value="asc">По возрастанию</option>
-            <option value="desc">По убыванию</option>
+            <option value="asc">Ascending</option>
+            <option value="desc">Descending</option>
           </select>
         </div>
         <div class="col-md-2">
-          <label for="filterPageSize" class="form-label">Товаров на странице</label>
+          <label for="filterPageSize" class="form-label">Products per page</label>
           <select class="form-select" id="filterPageSize" name="size">
             <option value="12">12</option>
             <option value="24">24</option>
@@ -144,10 +143,10 @@
           </select>
         </div>
         <div class="col-md-2">
-          <button type="button" class="btn btn-primary w-100" id="applyFilterBtn">Применить фильтры</button>
+          <button type="button" class="btn btn-primary w-100" id="applyFilterBtn">Apply Filters</button>
         </div>
         <div class="col-md-2">
-          <button type="button" class="btn btn-secondary w-100" id="resetFilterBtn">Сбросить фильтры</button>
+          <button type="button" class="btn btn-secondary w-100" id="resetFilterBtn">Reset Filters</button>
         </div>
       </form>
     </div>
@@ -156,7 +155,7 @@
     </div>
 
     <p class="no-products-message d-none text-center fs-5 text-muted" id="noProductsMessage">
-      По вашему запросу товары не найдены.
+      No products found for your query.
     </p>
 
     <nav aria-label="Product Page Navigation">
@@ -169,17 +168,17 @@
 
 <footer class="footer mt-5 py-3 bg-light">
   <div class="container text-center">
-    <p>&copy; 2025 Ваш Магазин. Все права защищены.</p>
+    <p>&copy; 2025 Your Shop. All rights reserved.</p>
   </div>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eOzrKbVj4hW+ALEwIH" crossorigin="anonymous"></script>
 <script>
   let currentPage = 0;
   let productsGridContainer;
   let noProductsMessage;
   let paginationControls;
-  let alertPlaceholder; // Для динамических сообщений
+  let alertPlaceholder; // For dynamic messages
 
   document.addEventListener('DOMContentLoaded', function() {
     productsGridContainer = document.getElementById('productsGridContainer');
@@ -187,36 +186,45 @@
     paginationControls = document.getElementById('paginationControls');
     alertPlaceholder = document.getElementById('alertPlaceholder');
 
+    // Optional: Add event listener for the logout form if needed for analytics or confirmation
+    document.getElementById('logoutForm').addEventListener('submit', function(event) {
+      // You can add client-side logic here before the form submits
+      console.log('Logout form submitted.');
+      // If you need to prevent default submission and handle via Fetch API:
+      // event.preventDefault();
+      // fetch('/auth/v1/logout', { method: 'POST' }).then(...)
+    });
+
     if (!productsGridContainer || !noProductsMessage || !paginationControls || !alertPlaceholder) {
-      console.error("Критические элементы DOM не найдены. Проверьте структуру HTML.");
-      // Показать сообщение об ошибке пользователю, если что-то не так
+      console.error("Critical DOM elements not found. Check HTML structure.");
+      // Show an error message to the user if something is wrong
       document.body.innerHTML = `<div class="alert alert-danger text-center mt-5" role="alert">
-                Произошла внутренняя ошибка загрузки страницы. Пожалуйста, попробуйте позже.
+                An internal page loading error occurred. Please try again later.
             </div>`;
       return;
     }
 
-    loadProducts(); // Инициализация загрузки товаров
+    loadProducts(); // Initialize product loading
 
     document.getElementById('applyFilterBtn').addEventListener('click', function() {
-      currentPage = 0; // Сбрасываем страницу на первую при применении фильтров
+      currentPage = 0; // Reset page to first when applying filters
       loadProducts();
     });
 
     document.getElementById('resetFilterBtn').addEventListener('click', function() {
-      document.getElementById('filterForm').reset(); // Сбрасываем все поля формы
-      currentPage = 0; // Сбрасываем страницу
+      document.getElementById('filterForm').reset(); // Reset all form fields
+      currentPage = 0; // Reset page
       loadProducts();
     });
   });
 
   /**
-   * Отображает всплывающее сообщение (успех/ошибка).
-   * @param {string} message Текст сообщения.
-   * @param {string} type Тип сообщения ('success' или 'danger').
+   * Displays a floating message (success/error).
+   * @param {string} message The message text.
+   * @param {string} type The message type ('success' or 'danger').
    */
   function showAlert(message, type) {
-    alertPlaceholder.innerHTML = ''; // Очищаем предыдущие сообщения
+    alertPlaceholder.innerHTML = ''; // Clear previous messages
     const wrapper = document.createElement('div');
     wrapper.innerHTML = `
             <div class="alert alert-${type} alert-dismissible fade show" role="alert">
@@ -228,10 +236,10 @@
   }
 
   /**
-   * Загружает продукты с бэкенда с учетом фильтров и пагинации.
+   * Loads products from the backend with filters and pagination.
    */
   async function loadProducts() {
-    // Собираем параметры фильтрации из формы
+    // Collect filtering parameters from the form
     const productName = document.getElementById('filterProductName').value;
     const minPrice = document.getElementById('filterMinPrice').value;
     const maxPrice = document.getElementById('filterMaxPrice').value;
@@ -244,16 +252,16 @@
     if (productName) params.append('name', productName);
     if (minPrice) params.append('minPrice', minPrice);
     if (maxPrice) params.append('maxPrice', maxPrice);
-    if (categories) params.append('categoryNames', categories); // Разделитель для бэкенда может быть разным
+    if (categories) params.append('categoryNames', categories); // Separator for backend might vary
     params.append('sortBy', sortBy);
     params.append('sortDirection', sortDirection);
     params.append('page', currentPage);
     params.append('size', pageSizeFromDropdown);
 
-    productsGridContainer.innerHTML = '<p class="text-center text-info">Загрузка товаров...</p>';
+    productsGridContainer.innerHTML = '<p class="text-center text-info">Loading products...</p>';
     noProductsMessage.classList.add('d-none');
     paginationControls.classList.add('d-none');
-    alertPlaceholder.innerHTML = ''; // Очищаем сообщения при новой загрузке
+    alertPlaceholder.innerHTML = ''; // Clear messages on new load
 
     try {
       const response = await fetch(`/api/v1/products?${params.toString()}`);
@@ -277,30 +285,30 @@
         noProductsMessage.classList.remove('d-none');
         updatePaginationControls(0);
       } else {
-        // Обработка других ошибок HTTP (4xx, 5xx)
+        // Handle other HTTP errors (4xx, 5xx)
         const errorText = await response.text();
         productsGridContainer.innerHTML = `<div class="alert alert-danger" role="alert">
-                    Не удалось загрузить товары: HTTP ${response.status} - ${errorText}
+                    Failed to load products: HTTP ${response.status} - ${errorText}
                 </div>`;
         noProductsMessage.classList.add('d-none');
         updatePaginationControls(0);
         console.error('API Error:', errorText);
-        showAlert(`Ошибка при загрузке товаров: ${response.status} - ${errorText}`, 'danger');
+        showAlert(`Error loading products: ${response.status} - ${errorText}`, 'danger');
       }
     } catch (error) {
       productsGridContainer.innerHTML = `<div class="alert alert-danger" role="alert">
-                Ошибка сети: ${error.message}. Не удалось подключиться к серверу.
+                Network error: ${error.message}. Could not connect to the server.
             </div>`;
       noProductsMessage.classList.add('d-none');
       updatePaginationControls(0);
       console.error('Error fetching products:', error);
-      showAlert(`Ошибка сети: ${error.message}. Пожалуйста, проверьте ваше соединение.`, 'danger');
+      showAlert(`Network error: ${error.message}. Please check your connection.`, 'danger');
     }
   }
 
   /**
-   * Обновляет элементы управления пагинацией.
-   * @param {number} totalPages Общее количество страниц.
+   * Updates pagination controls.
+   * @param {number} totalPages Total number of pages.
    */
   function updatePaginationControls(totalPages) {
     paginationControls.innerHTML = '';
@@ -312,14 +320,14 @@
       paginationControls.classList.remove('d-none');
     }
 
-    // Кнопка "Предыдущая"
+    // "Previous" button
     const prevItem = document.createElement('li');
     prevItem.classList.add('page-item');
     if (currentPage === 0) prevItem.classList.add('disabled');
     const prevLink = document.createElement('a');
     prevLink.classList.add('page-link');
     prevLink.href = '#';
-    prevLink.textContent = 'Предыдущая';
+    prevLink.textContent = 'Previous';
     prevLink.addEventListener('click', (e) => {
       e.preventDefault();
       if (currentPage > 0) {
@@ -330,17 +338,17 @@
     prevItem.appendChild(prevLink);
     paginationControls.appendChild(prevItem);
 
-    // Отображение номеров страниц
-    const maxPageLinks = 5; // Максимальное количество видимых ссылок на страницы
+    // Display page numbers
+    const maxPageLinks = 5; // Maximum number of visible page links
     let startPage = Math.max(0, currentPage - Math.floor(maxPageLinks / 2));
     let endPage = Math.min(totalPages - 1, startPage + maxPageLinks - 1);
 
-    // Корректировка, если в конце страниц не хватает для полного блока
+    // Adjustment if there aren't enough pages at the end for a full block
     if (endPage - startPage + 1 < maxPageLinks) {
       startPage = Math.max(0, endPage - maxPageLinks + 1);
     }
 
-    // Если есть пропуск в начале
+    // If there's a gap at the beginning
     if (startPage > 0) {
       const firstPageItem = document.createElement('li');
       firstPageItem.classList.add('page-item');
@@ -355,7 +363,7 @@
       });
       firstPageItem.appendChild(firstPageLink);
       paginationControls.appendChild(firstPageItem);
-      if (startPage > 1) { // Если не сразу после 1-й страницы
+      if (startPage > 1) { // If not immediately after page 1
         const ellipsisItem = document.createElement('li');
         ellipsisItem.classList.add('page-item', 'disabled');
         const ellipsisLink = document.createElement('span');
@@ -366,16 +374,16 @@
       }
     }
 
-    // Сами номера страниц
+    // Actual page numbers
     for (let i = startPage; i <= endPage; i++) {
       const pageItem = document.createElement('li');
       pageItem.classList.add('page-item');
-      if (i === currentPage) pageItem.classList.add('active'); // Выделяем текущую страницу
+      if (i === currentPage) pageItem.classList.add('active'); // Highlight current page
       const pageLink = document.createElement('a');
       pageLink.classList.add('page-link');
       pageLink.href = '#';
-      pageLink.textContent = i + 1; // Номера страниц начинаются с 1
-      pageLink.dataset.page = i; // Сохраняем реальный индекс страницы
+      pageLink.textContent = i + 1; // Page numbers start from 1
+      pageLink.dataset.page = i; // Store actual page index
       pageLink.addEventListener('click', (e) => {
         e.preventDefault();
         currentPage = parseInt(e.target.dataset.page);
@@ -385,9 +393,9 @@
       paginationControls.appendChild(pageItem);
     }
 
-    // Если есть пропуск в конце
+    // If there's a gap at the end
     if (endPage < totalPages - 1) {
-      if (endPage < totalPages - 2) { // Если не сразу перед последней
+      if (endPage < totalPages - 2) { // If not immediately before the last page
         const ellipsisItem = document.createElement('li');
         ellipsisItem.classList.add('page-item', 'disabled');
         const ellipsisLink = document.createElement('span');
@@ -411,14 +419,14 @@
       paginationControls.appendChild(lastPageItem);
     }
 
-    // Кнопка "Следующая"
+    // "Next" button
     const nextItem = document.createElement('li');
     nextItem.classList.add('page-item');
     if (currentPage === totalPages - 1) nextItem.classList.add('disabled');
     const nextLink = document.createElement('a');
     nextLink.classList.add('page-link');
     nextLink.href = '#';
-    nextLink.textContent = 'Следующая';
+    nextLink.textContent = 'Next';
     nextLink.addEventListener('click', (e) => {
       e.preventDefault();
       if (currentPage < totalPages - 1) {
@@ -431,41 +439,41 @@
   }
 
   /**
-   * Создает HTML-сетку карточек товаров.
-   * @param {Array} products Массив объектов товаров.
-   * @returns {string} HTML-строка с карточками.
+   * Creates an HTML grid of product cards.
+   * @param {Array} products Array of product objects.
+   * @returns {string} HTML string with product cards.
    */
   function createProductsGrid(products) {
     if (!products || products.length === 0) {
       return '';
     }
 
-    let gridHtml = ''; // Начнем с пустой строки
+    let gridHtml = ''; // Start with an empty string
 
     products.forEach(product => {
-      const imageUrl = product.imageUrl || 'https://via.placeholder.com/200?text=Нет+изображения';
+      const imageUrl = product.imageUrl || 'https://via.placeholder.com/200?text=No+Image';
       const categories = product.categoryNames && Array.isArray(product.categoryNames) && product.categoryNames.length > 0
               ? product.categoryNames.join(', ')
-              : 'Без категории';
+              : 'Uncategorized';
       const price = product.price != null ? `${product.price.toFixed(2)} MDL` : '0.00 MDL';
       const inStockClass = product.inStock ? 'in-stock' : 'out-of-stock';
-      const inStockText = product.inStock ? 'В наличии' : 'Нет в наличии';
-      const disableButton = product.inStock ? '' : 'disabled'; // Отключаем кнопку, если нет в наличии
+      const inStockText = product.inStock ? 'In Stock' : 'Out of Stock';
+      const disableButton = product.inStock ? '' : 'disabled'; // Disable button if out of stock
 
       gridHtml += `
                 <div class="col-md-4 col-sm-6 col-lg-3 d-flex align-items-stretch">
                     <div class="card product-card w-100">
-                        <img src="${imageUrl}" class="card-img-top" alt="${product.name || 'Изображение товара'}">
+                        <img src="${imageUrl}" class="card-img-top" alt="${product.name || 'Product Image'}">
                         <div class="card-body d-flex flex-column">
-                            <h5 class="card-title">${product.name || 'Название не указано'}</h5>
-                            <p class="card-text flex-grow-1">${product.description || 'Описание отсутствует.'}</p>
-                            <p class="card-text"><strong>Категории:</strong> ${categories}</p>
+                            <h5 class="card-title">${product.name || 'Name not specified'}</h5>
+                            <p class="card-text flex-grow-1">${product.description || 'Description is missing.'}</p>
+                            <p class="card-text"><strong>Categories:</strong> ${categories}</p>
                             <p class="price">${price}</p>
                             <p class="stock-indicator ${inStockClass}">${inStockText}</p>
                             <button type="button" class="btn btn-primary btn-add-to-cart mt-auto"
                                     data-product-id="${product.id}"
                                     ${disableButton}>
-                                Добавить в корзину
+                                Add to Cart
                             </button>
                         </div>
                     </div>
@@ -475,65 +483,65 @@
     return gridHtml;
   }
 
-  // --- JavaScript для добавления в корзину (использует API корзины, который мы уже обсуждали) ---
+  // --- JavaScript for adding to cart (uses the cart API we already discussed) ---
   document.addEventListener('click', async function(event) {
     if (event.target.classList.contains('btn-add-to-cart')) {
       const button = event.target;
       const productId = button.dataset.productId;
 
       if (!productId) {
-        console.error('Не найден ID продукта для добавления в корзину.');
-        showAlert('Ошибка: не найден ID продукта для добавления.', 'danger');
+        console.error('Product ID not found for adding to cart.');
+        showAlert('Error: Product ID not found for adding to cart.', 'danger');
         return;
       }
 
-      // Отключаем кнопку, чтобы избежать повторных кликов и показываем статус
+      // Disable the button to prevent multiple clicks and show status
       button.disabled = true;
-      button.textContent = 'Добавляем...';
+      button.textContent = 'Adding...';
 
       try {
-        // Отправляем запрос на добавление товара в корзину (на эндпоинт, который обрабатывает ваш CartService)
+        // Send request to add item to cart (to the endpoint handled by your CartService)
         const response = await fetch('/api/v1/cart/add', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            // Если вы используете Spring Security с JWT или другим токеном,
-            // его нужно будет добавить сюда, например:
+            // If you are using Spring Security with JWT or another token,
+            // it will need to be added here, for example:
             // 'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
           },
           body: JSON.stringify({
-            productId: parseInt(productId), // ID продукта
-            quantity: 1 // По умолчанию добавляем 1 товар
+            productId: parseInt(productId), // Product ID
+            quantity: 1 // Default to adding 1 item
           })
         });
 
         if (response.ok) {
-          const responseData = await response.json(); // Если сервер возвращает обновленную корзину
-          showAlert('Товар успешно добавлен в корзину!', 'success');
-          console.log('Корзина обновлена:', responseData);
-          // Здесь можно обновить UI корзины (например, счетчик товаров в шапке)
+          const responseData = await response.json(); // If the server returns an updated cart
+          showAlert('Item successfully added to cart!', 'success');
+          console.log('Cart updated:', responseData);
+          // Here you can update the cart UI (e.g., item count in header)
         } else if (response.status === 400) {
-          // Обработка Bad Request, например, если товара недостаточно на складе
+          // Handle Bad Request, e.g., if there's insufficient stock
           const errorData = await response.json();
-          showAlert(`Ошибка: ${errorData.message || 'Не удалось добавить товар в корзину.'}`, 'danger');
+          showAlert(`Error: ${errorData.message || 'Failed to add item to cart.'}`, 'danger');
         } else if (response.status === 401 || response.status === 403) {
-          // Пользователь не авторизован или не имеет прав
-          showAlert('Для добавления товаров в корзину, пожалуйста, войдите в систему.', 'danger');
-          // Возможно, перенаправить на страницу входа
+          // User is unauthorized or does not have permissions
+          showAlert('Please log in to add items to your cart.', 'danger');
+          // Optionally redirect to login page
           setTimeout(() => window.location.href = '/login', 2000);
         }
         else {
           const errorData = await response.json();
-          showAlert(`Ошибка при добавлении товара: ${errorData.Error || response.statusText}`, 'danger');
-          console.error('Ошибка добавления в корзину:', errorData);
+          showAlert(`Error adding item: ${errorData.Error || response.statusText}`, 'danger');
+          console.error('Error adding to cart:', errorData);
         }
       } catch (error) {
-        showAlert('Произошла ошибка сети при добавлении товара в корзину.', 'danger');
-        console.error('Ошибка сети:', error);
+        showAlert('A network error occurred while adding the item to cart.', 'danger');
+        console.error('Network error:', error);
       } finally {
-        // Возвращаем кнопку в исходное состояние
+        // Restore button to its original state
         button.disabled = false;
-        button.textContent = 'Добавить в корзину';
+        button.textContent = 'Add to Cart';
       }
     }
   });

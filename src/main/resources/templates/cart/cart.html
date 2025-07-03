@@ -30,13 +30,10 @@
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/my-orders">My Orders</a>
+            <a class="nav-link" href="#">My Orders</a>
           </li>
         </ul>
         <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="/login">Log In</a>
-          </li>
           <li class="nav-item">
             <a class="nav-link" href="/auth/v1/logout">Log Out</a>
           </li>
@@ -57,6 +54,13 @@
       <p>Total selected items: <span id="selected-total-quantity">0</span></p>
       <p>Total cost of selected items: <span id="selected-total-cost">0.00</span> MDL</p>
       <div class="mt-3">
+        <div class="mb-3">
+          <label for="paymentMethodSelect" class="form-label">Choose Payment Method:</label>
+          <select class="form-select" id="paymentMethodSelect" aria-label="Select Payment Method">
+            <option value="stripe" selected>Stripe</option>
+            <option value="paypal" selected>PayPal</option>
+          </select>
+        </div>
         <button type="button" id="purchaseSelectedButton" class="btn btn-success btn-lg disabled" onclick="purchaseSelectedItems()">
           Purchase Selected
         </button>
@@ -406,11 +410,9 @@
    */
   async function purchaseSelectedItems() {
     const purchaseButton = document.getElementById('purchaseSelectedButton');
-    // We don't send selectedProductIds because the backend will filter by item.isSelected()
-    // based on the DB state.
-    // If frontend and backend are synchronized, then currentCartItems.filter(item => item.selected)
-    // will correspond to selectedCartItems on the backend.
-    // Here we just check if anything is selected on the UI to activate the button.
+    // Get the selected payment method from the dropdown
+    const selectedPaymentMethod = document.getElementById('paymentMethodSelect').value;
+
     const selectedCount = Array.from(document.querySelectorAll('.item-checkbox:checked')).length;
 
     if (selectedCount === 0) {
@@ -422,23 +424,25 @@
     purchaseButton.textContent = 'Processing purchase...';
 
     try {
-      // No need to send a body, as the backend retrieves selected items from the user's cart itself.
-      const response = await fetch('/api/v1/cart/purchase', {
+      // Pass the paymentMethod as a query parameter
+      const response = await fetch(`/api/v1/cart/purchase?paymentMethod=${selectedPaymentMethod}`, {
         method: 'POST', // POST, as this is a state-changing action.
         headers: getHeaders()
       });
 
       if (response.ok) {
-        const updatedCartResponseDto = await response.json();
-        showAlert('Selected items successfully purchased! Cart updated.', 'success');
+        const purchaseResponse = await response.json(); // Expecting a Map<String, String> like {"approval_url": "..."}
 
-        // Update global currentCartItems based on the server response.
-        currentCartItems = updatedCartResponseDto.cartItems; // Assign new data from DTO.
-
-        renderCartItems(currentCartItems);
-        updateSelectedSummary();
-        updateCartItemCount();
-        updatePaginationControls(currentPage, totalPages);
+        // Handle specific payment gateway responses (e.g., PayPal redirect URL)
+        if (purchaseResponse.approval_url) {
+          showAlert('Redirecting to PayPal for payment...', 'info');
+          window.location.href = purchaseResponse.approval_url; // Redirect to PayPal
+        } else {
+          // For payment methods that complete synchronously or provide a direct confirmation
+          showAlert('Selected items successfully purchased! Cart updated.', 'success');
+          // Update cart items and summary after successful purchase
+          await updateCartSummaryAndItems();
+        }
       } else {
         const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
         showAlert(`Error purchasing selected items: ${errorData.message || response.statusText}`, 'danger');
@@ -455,6 +459,34 @@
       purchaseButton.textContent = 'Purchase Selected';
     }
   }
+
+  /**
+   * Helper function to update the cart summary and items after an operation (like purchase or removal).
+   */
+  async function updateCartSummaryAndItems() {
+    try {
+      // Re-fetch the cart contents to get the latest state
+      const response = await fetch(`/api/v1/cart/items?page=${currentPage}&size=${pageSize}`, {
+        method: 'GET',
+        headers: getHeaders()
+      });
+      if (response.ok) {
+        const pageData = await response.json();
+        currentCartItems = pageData.content;
+        currentPage = pageData.number;
+        totalPages = pageData.totalPages;
+        renderCartItems(currentCartItems);
+        updateSelectedSummary();
+        updateCartItemCount();
+        updatePaginationControls(currentPage, totalPages);
+      } else {
+        console.error('Failed to fetch updated cart details after purchase or removal.');
+      }
+    } catch (error) {
+      console.error('Network error fetching updated cart details:', error);
+    }
+  }
+
 
   /**
    * Renders the cart items in the table body.

@@ -1,86 +1,161 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Register</title>
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register for Our Shop</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👤</text></svg>">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
     <style>
+        html{
+            height: 100%; /* Occupy full viewport height */
+            margin: 0;
+            padding: 0;
+        }
         body {
-            font-family: Arial, sans-serif;
-            max-width: 400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .error-message {
-            color: red;
-            margin-bottom: 15px;
-            padding: 10px;
-            border: 1px solid red;
-            border-radius: 4px;
-            background-color: #ffeeee;
-            display: none;
-        }
-        .error-field {
-            border-color: red !important;
-        }
-        .field-error {
-            color: red;
-            font-size: 0.9em;
-            height: 16px;
-            display: block;
-            margin-top: -10px;
-            margin-bottom: 5px;
-        }
-        form {
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            gap: 10px;
         }
-        input {
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            align-items: center; /* Center vertically */
+            justify-content: center; /* Center horizontally */
+            padding: 20px; /* Add some padding */
+        }
+        .register-container { /* Renamed from login-container for clarity */
+            max-width: 450px;
+            width: 100%;
+            padding: 30px;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            background-color: #ffffff;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        }
+        .global-error-message { /* Renamed from error-message for clarity */
+            color: #dc3545; /* Bootstrap danger color */
+            margin-bottom: 15px;
             padding: 10px;
-            border: 1px solid #ccc;
+            border: 1px solid #dc3545;
             border-radius: 4px;
+            background-color: #f8d7da; /* Light red background */
+            text-align: center;
+            display: none; /* Hidden by default */
         }
-        button {
+        .field-error-message { /* Specific style for field errors */
+            color: #dc3545;
+            font-size: 0.875em; /* Smaller font for field-specific errors */
+            margin-top: 0.25rem;
+            margin-bottom: 0.5rem;
+            display: block; /* Ensure it takes its own line */
+        }
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        .g-recaptcha {
+            margin-top: 15px;
+            margin-bottom: 15px;
+            /* reCAPTCHA is typically displayed by default for registration */
+            transform: scale(0.9); /* Slightly shrink recaptcha to fit better */
+            transform-origin: 0 0; /* Adjust origin for scaling */
+        }
+        .btn-register-submit { /* Specific style for register button */
+            width: 100%;
             padding: 10px;
-            background-color: #4CAF50;
+            background-color: #0d6efd; /* Bootstrap primary blue */
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
         }
-        button:hover {
-            background-color: #45a049;
+        .btn-register-submit:hover {
+            background-color: #0b5ed7; /* Darker blue on hover */
         }
-        #recaptcha-container {
-            margin: 15px 0;
-            display: block;
+        .footer {
+            flex-shrink: 0;
+            background-color: #343a40;
+            color: white;
+            padding: 1rem 0;
+            width: 100%;
         }
     </style>
 </head>
 <body>
-<h2>Register</h2>
 
-<div id="globalError" class="error-message"></div>
+<header>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">Our Shop</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">Login</a>
+                    </li>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
 
-<form id="registerForm">
-    <input type="text" name="username" placeholder="Username" required/>
-    <span class="field-error" data-for="username"></span>
+<main class="main-content">
+    <div class="register-container">
+        <h2 class="mb-4 text-center text-primary">Create Your Account</h2>
 
-    <input type="email" name="email" placeholder="Email" required/>
-    <span class="field-error" data-for="email"></span>
+        <div id="globalError" class="global-error-message"></div>
 
-    <input type="password" name="password" placeholder="Password" required/>
-    <span class="field-error" data-for="password"></span>
+        <form id="registerForm">
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" required/>
+                <span class="field-error-message" data-for="username"></span>
+            </div>
 
-    <input type="password" name="confirmPassword" placeholder="Confirm password" required/>
-    <span class="field-error" data-for="confirmPassword"></span>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email address</label>
+                <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" required/>
+                <span class="field-error-message" data-for="email"></span>
+            </div>
 
-    <div id="recaptcha-container" class="g-recaptcha"
-         data-sitekey="6Lcjd0ArAAAAAAL3X5sQAsNtBpjr14Bqumz4cAy4"></div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required/>
+                <span class="field-error-message" data-for="password"></span>
+            </div>
 
-    <button type="submit">Register</button>
-</form>
+            <div class="mb-3">
+                <label for="confirmPassword" class="form-label">Confirm Password</label>
+                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" placeholder="Confirm password" required/>
+                <span class="field-error-message" data-for="confirmPassword"></span>
+            </div>
 
+            <div id="recaptcha-container" class="g-recaptcha"
+                 data-sitekey="6Lcjd0ArAAAAAAL3X5sQAsNtBpjr14Bqumz4cAy4"></div>
+
+            <button type="submit" class="btn btn-primary btn-register-submit">Register</button>
+            <button type="button" class="btn btn-secondary mt-3" onclick="window.location.href='/login'">Already have an account? Login</button>
+        </form>
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="container text-center">
+        <p>&copy; 2025 Our Shop. All rights reserved.</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eOzrKbVj4hW+ALEwIH" crossorigin="anonymous"></script>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('registerForm');
@@ -89,9 +164,9 @@
         form.addEventListener('submit', function(e) {
             e.preventDefault();
 
-            // Очищаем предыдущие ошибки
-            document.querySelectorAll('.field-error').forEach(el => el.textContent = '');
-            document.querySelectorAll('input').forEach(input => input.classList.remove('error-field'));
+            // Clear previous errors
+            document.querySelectorAll('.field-error-message').forEach(el => el.textContent = '');
+            document.querySelectorAll('.form-control').forEach(input => input.classList.remove('is-invalid')); // Use Bootstrap's invalid class
             globalErrorDiv.style.display = 'none';
             globalErrorDiv.textContent = '';
 
@@ -100,6 +175,17 @@
 
             for (const [key, value] of formData.entries()) {
                 params.append(key, value);
+            }
+
+            // Get reCAPTCHA response
+            const captchaResponse = grecaptcha.getResponse();
+            if (captchaResponse) {
+                params.append('g-recaptcha-response', captchaResponse);
+            } else {
+                // If CAPTCHA is required but not solved
+                globalErrorDiv.textContent = 'Please complete the reCAPTCHA challenge.';
+                globalErrorDiv.style.display = 'block';
+                return; // Stop form submission
             }
 
             fetch('/auth/v1/register', {
@@ -111,30 +197,44 @@
             })
                 .then(response => {
                     if (response.redirected) {
-                        window.location.href = response.url;
+                        window.location.href = response.url; // Redirect on successful registration
+                        return; // Stop further processing
                     } else if (!response.ok) {
+                        // Process errors from the backend
                         return response.json().then(errors => {
-                            // Обрабатываем ошибки полей
-                            for (const [field, message] of Object.entries(errors)) {
-                                if (field === 'globalError') {
-                                    globalErrorDiv.textContent = message;
-                                    globalErrorDiv.style.display = 'block';
-                                } else {
-                                    const input = document.querySelector(`[name="${field}"]`);
-                                    const errorSpan = document.querySelector(`.field-error[data-for="${field}"]`);
+                            // Check for a global error message
+                            if (errors.globalError) {
+                                globalErrorDiv.textContent = errors.globalError;
+                                globalErrorDiv.style.display = 'block';
+                            }
 
-                                    if (input) input.classList.add('error-field');
-                                    if (errorSpan) errorSpan.textContent = message;
+                            // Iterate through field-specific errors
+                            for (const [field, message] of Object.entries(errors)) {
+                                if (field !== 'globalError') { // Don't re-process globalError
+                                    const input = document.getElementById(field); // Get input by ID
+                                    const errorSpan = document.querySelector(`.field-error-message[data-for="${field}"]`);
+
+                                    if (input) {
+                                        input.classList.add('is-invalid'); // Add Bootstrap's invalid styling
+                                    }
+                                    if (errorSpan) {
+                                        errorSpan.textContent = message;
+                                    }
                                 }
                             }
+                            // Reset reCAPTCHA after a failed attempt
+                            grecaptcha.reset();
                         });
                     }
-                    return response;
+                    // If response is OK but not a redirect (e.g., specific success JSON)
+                    // You might want to handle it here, though a redirect to a login/success page is common.
+                    return response.json(); // Or return response.text()
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     globalErrorDiv.textContent = 'An unexpected error occurred. Please try again.';
                     globalErrorDiv.style.display = 'block';
+                    grecaptcha.reset(); // Reset reCAPTCHA on network/unexpected error
                 });
         });
     });

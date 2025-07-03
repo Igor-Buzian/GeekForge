@@ -1,4 +1,4 @@
-package com.example.spring.controller;
+package com.example.spring.controller.view;
 
 import com.example.spring.dto.cart.CartFilterDto;
 import com.example.spring.dto.cart.CartItemDto;
@@ -13,6 +13,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller // This annotation indicates it's a Spring MVC controller returning views
 @RequiredArgsConstructor
@@ -57,7 +58,13 @@ public class CartViewController {
         return "cart/cart"; // This will resolve to /templates/cart.html
     }
 
-    // You might add more view-related endpoints here, e.g., for checkout confirmation page
+    /**
+     * Displays the checkout page.
+     *
+     * @param currentUser The authenticated user.
+     * @param model The Spring Model to pass data to the view.
+     * @return The name of the Thymeleaf template for the checkout page.
+     */
     @GetMapping("/checkout")
     public String showCheckoutPage(@AuthenticationPrincipal User currentUser, Model model) {
         if (currentUser == null) {
@@ -66,5 +73,39 @@ public class CartViewController {
         CartResponseDto cart = cartService.getUserCart(currentUser);
         model.addAttribute("cart", cart);
         return "checkout"; // Resolves to /templates/checkout.html
+    }
+
+    /**
+     * Handles requests for the successful payment page.
+     *
+     * @param userId The ID of the user.
+     * @param paymentId The payment ID from the payment gateway.
+     * @param transactionId The transaction ID from the payment gateway.
+     * @param model The Spring Model to pass data to the view.
+     * @return The name of the Thymeleaf template for the success payment page.
+     */
+    @GetMapping("/success-payment")
+    public String handleSuccessPayment(
+            @RequestParam("userId") Long userId,
+            @RequestParam("paymentId") String paymentId,
+            @RequestParam("transactionId") String transactionId,
+            Model model) {
+
+        model.addAttribute("userId", userId);
+        model.addAttribute("paymentId", paymentId);
+        model.addAttribute("transactionId", transactionId);
+        // Add other data you want to display on the page
+
+        return "cart/success-payment";
+    }
+
+    /**
+     * Handles requests for the payment error page.
+     *
+     * @return The name of the Thymeleaf template for the error page.
+     */
+    @GetMapping("/error-payment")
+    public String handleErrorPayment() {
+        return "cart/error-page"; // Template name for the error page
     }
 }

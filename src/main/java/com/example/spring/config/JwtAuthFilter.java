@@ -1,4 +1,4 @@
-package com.example.spring.confing;
+package com.example.spring.config;
 
 import com.example.spring.entity.User;
 import com.example.spring.service.RepositoryService;

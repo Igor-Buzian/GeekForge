@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Successful!</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✅</text></svg>">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-color: #f8f9fa;
+    }
+    .container {
+      text-align: center;
+      background-color: #ffffff;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .icon {
+      font-size: 5rem;
+      color: #28a745; /* Green color for success */
+      margin-bottom: 20px;
+    }
+    h1 {
+      color: #28a745;
+      margin-bottom: 15px;
+    }
+    p {
+      font-size: 1.1rem;
+      color: #6c757d;
+      margin-bottom: 25px;
+    }
+    .btn-primary {
+      background-color: #007bff;
+      border-color: #007bff;
+    }
+    .btn-primary:hover {
+      background-color: #0056b3;
+      border-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="icon">✅</div>
+  <h1>Payment Successful!</h1>
+  <p>Your order has been placed successfully. Thank you for your purchase!</p>
+  <p>You can view your order details in the "My Orders" section.</p>
+  <a href="/api/v1/user/all-products" class="btn btn-primary btn-lg me-2">Continue Shopping</a>
+  <a href="/cart" class="btn btn-secondary btn-lg">Return to Cart</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>

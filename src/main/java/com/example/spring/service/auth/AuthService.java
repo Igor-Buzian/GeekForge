@@ -35,7 +35,7 @@ public class AuthService {
 
     public ResponseEntity<?>logout(HttpServletResponse response)
     {
-        Cookie cookie = new Cookie("New_User", null);
+        Cookie cookie = new Cookie("Auth_cookie", null);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
         cookie.setMaxAge(0);
@@ -109,7 +109,7 @@ public class AuthService {
         response.addCookie(cookie);
 
         HttpHeaders headers =new HttpHeaders();
-        headers.add("Location", "/success");
+        headers.add("Location", "/api/v1/user/all-products");
         return  new ResponseEntity<>(headers, HttpStatus.SEE_OTHER);
 
     }

@@ -1,9 +1,8 @@
-package com.example.spring.confing;
+package com.example.spring.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -49,7 +48,6 @@ public class SecurityConfig {
                                 "/register**",
                                 "/auth/v1/**"
                         ).permitAll()
-                        //.requestMatchers("/success").hasRole("USER") // Requires authentication for /success
                         .requestMatchers("/product/v1/admin/**").hasAuthority("ROLE_ADMIN")
                         // ИЗМЕНИТЕ ЭТУ СТРОКУ:
                         .requestMatchers("/category/v1/admin/**").hasAuthority("ROLE_ADMIN") // <-- ЗДЕСЬ ДОЛЖЕН БЫТЬ "/**"

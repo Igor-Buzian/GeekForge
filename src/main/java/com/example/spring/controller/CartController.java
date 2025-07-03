@@ -5,23 +5,32 @@ import com.example.spring.dto.cart.CartItemDto;
 import com.example.spring.dto.cart.CartItemRequestDto;
 import com.example.spring.dto.cart.CartResponseDto;
 import com.example.spring.entity.User;
+import com.example.spring.repository.ProductRepository; // This import might be unused now
+import com.example.spring.repository.UserRepository;
 import com.example.spring.service.busket.CartService;
+import com.example.spring.service.payment.PaymentService;
+import com.example.spring.service.payment.PaymentServiceFactory;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.ui.Model; // This import might be unused now for @RestController
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/cart")
 public class CartController {
-
+    private final UserRepository userRepository;
     private final CartService cartService;
+    private final PaymentServiceFactory paymentServiceFactory;
     private static final Logger logger = LoggerFactory.getLogger(CartController.class);
 
     /**
@@ -158,24 +167,130 @@ public class CartController {
     }
 
     /**
-     * Processes the purchase of selected items in the user's cart.
-     * This method validates stock, reduces product quantities, and removes purchased items from the cart.
+     * Initiates the purchase process for selected items in the user's cart.
+     * The chosen payment method is used to process the transaction.
      *
-     * @param currentUser The authenticated user.
-     * @return An updated CartResponseDto showing remaining items in the cart (or an empty cart),
-     * or appropriate error status if the purchase fails.
+     * @param user The authenticated user.
+     * @param paymentMethod The chosen payment method (e.g., "paypal", "stripe").
+     * @return A ResponseEntity containing a map with transaction details, potentially including a redirect URL.
      */
     @PostMapping("/purchase")
-    public ResponseEntity<CartResponseDto> purchaseCart(
-            @AuthenticationPrincipal User currentUser) {
-        if (currentUser == null) {
-            logger.warn("Unauthorized attempt to purchase cart.");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401 Unauthorized
+    public ResponseEntity<Map<String, String>> purchaseCart(@AuthenticationPrincipal User user,
+                                                            @RequestParam String paymentMethod) {
+        // Log the received payment method for debugging
+        System.out.println("Received purchase request with payment method: " + paymentMethod);
+        Map<String, String> response = cartService.purchaseCart(user, paymentMethod);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Handles the success callback from PayPal after a payment approval.
+     * This endpoint is typically configured in your PayPal developer settings as a return URL.
+     *
+     * @param paymentId The ID of the payment from PayPal.
+     * @param payerId The ID of the payer from PayPal.
+     * @param currentUser The authenticated user, if available.
+     * @param userId The ID of the user (if included in your return URL for session re-establishment), used as a fallback.
+     * @return A ResponseEntity that triggers a redirect to a user-facing success page or an error page.
+     */
+    @GetMapping("/payment/success")
+    public ResponseEntity<Void> paypalSuccess(@RequestParam("paymentId") String paymentId,
+                                              @RequestParam("PayerID") String payerId,
+                                              @AuthenticationPrincipal User currentUser,
+                                              @RequestParam(value = "userId", required = false) Long userId) {
+
+        User user = currentUser;
+        if (user == null && userId != null) {
+            user = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found for payment finalization."));
         }
-        logger.info("Attempting to purchase cart for user: {}", currentUser.getId());
-        // CartService method throws ResponseStatusException, which Spring will handle
-        CartResponseDto purchasedCart = cartService.purchaseCart(currentUser);
-        logger.info("Cart purchase successful for user: {}. Remaining items in cart: {}", currentUser.getId(), purchasedCart.getCartItems().size());
-        return ResponseEntity.ok(purchasedCart);
+
+        if (user == null) {
+            logger.warn("User session expired or not found for payment finalization. Redirecting to error page.");
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Location", "/cart/error-payment?message=User session expired or not found. Cannot finalize payment.");
+            return new ResponseEntity<>(headers, HttpStatus.FOUND); // 302 Found
+        }
+
+        try {
+            PaymentService paymentService = paymentServiceFactory.getPaymentService("paypal");
+
+            // 1. Execute the payment through the PayPal API
+            Map<String, String> paymentExecutionResult = paymentService.executePayment(paymentId, payerId, user);
+
+            // Check the execution result
+            if ("approved".equals(paymentExecutionResult.get("status"))) {
+                // If the payment is successfully executed by PayPal, finalize the purchase in your system
+                String paypalTransactionId = paymentExecutionResult.get("transactionId");
+
+                // Call finalizePurchase, passing the transaction ID
+                cartService.finalizePurchase(user, paypalTransactionId);
+
+                logger.info("Payment successful for user {}. Redirecting to success page. PayPal Transaction ID: {}", user.getId(), paypalTransactionId);
+
+                // Create ResponseEntity for redirect
+                HttpHeaders headers = new HttpHeaders();
+                headers.add("Location", "/cart/success-payment?paymentId=" + paymentId + "&transactionId=" + paypalTransactionId + "&userId=" + user.getId());
+                return new ResponseEntity<>(headers, HttpStatus.FOUND); // 302 Found
+
+            } else {
+                // Payment was not approved by PayPal
+                String errorMessage = "PayPal payment not approved. Status: " + paymentExecutionResult.get("status") + ". " + paymentExecutionResult.getOrDefault("message", "");
+                logger.warn("PayPal payment not approved for user {}: {}", user.getId(), errorMessage);
+                HttpHeaders headers = new HttpHeaders();
+                headers.add("Location", "/cart/error-payment?message=" + errorMessage);
+                return new ResponseEntity<>(headers, HttpStatus.FOUND);
+            }
+
+        } catch (ResponseStatusException e) {
+            logger.error("ResponseStatusException during PayPal success callback for userId {}: {}", user.getId(), e.getReason(), e);
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Location", "/cart/error-payment?message=" + e.getReason());
+            return new ResponseEntity<>(headers, HttpStatus.FOUND);
+        } catch (Exception e) {
+            logger.error("An unexpected error occurred during PayPal success callback for userId {}: {}", user.getId(), e.getMessage(), e);
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Location", "/cart/error-payment?message=An unexpected error occurred during payment processing: " + e.getMessage());
+            return new ResponseEntity<>(headers, HttpStatus.FOUND);
+        }
+    }
+
+    /**
+     * Handles the cancel callback from PayPal if a user aborts the payment.
+     * This endpoint will redirect the user to a dedicated cancellation page.
+     *
+     * @param currentUser The authenticated user, if available.
+     * @param userId The ID of the user (if included in your cancel URL), used as a fallback.
+     * @return A ResponseEntity that triggers a redirect to the cancellation page.
+     */
+    @GetMapping("/payment/cancel")
+    public ResponseEntity<Void> paypalCancel(
+            @AuthenticationPrincipal User currentUser,
+            @RequestParam(value = "userId", required = false) Long userId) {
+
+        User user = currentUser;
+        if (user == null && userId != null) {
+            // Try to find the user by userId if not authenticated
+            user = userRepository.findById(userId)
+                    .orElse(null); // If not found, keep as null
+        }
+
+        if (user != null) {
+            logger.info("PayPal payment cancelled for user: {}", user.getId());
+            // You might want to reset any temporary cart states here if applicable
+            // cartService.clearTemporaryPaymentState(user); // Example
+        } else {
+            logger.warn("PayPal payment cancelled by unauthenticated or unknown user (userId: {}).", userId);
+        }
+
+        // Create headers for the redirect
+        HttpHeaders headers = new HttpHeaders();
+        // Redirect to the View controller to display the cancellation page
+        // You can add parameters if you want to display something specific on the cancellation page
+        headers.add("Location", "/cart/error-payment?message=PayPal payment was cancelled by user.");
+        // Alternatively, if you have a separate cancellation page:
+        // headers.add("Location", "/cart/cancel-payment?userId=" + (user != null ? user.getId() : "null"));
+
+        return new ResponseEntity<>(headers, HttpStatus.FOUND); // 302 Found
     }
 }
