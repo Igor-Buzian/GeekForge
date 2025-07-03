@@ -19,7 +19,7 @@ public class ProductSpecificationUser {
            List<Predicate> predicates = new ArrayList<>();
 
            if(filterUserDto.getName()!=null && !filterUserDto.getName().isEmpty()){
-               predicates.add(cb.like(cb.lower(root.get("name")), "%"+filterUserDto.getName()+"%"));
+               predicates.add(cb.like(cb.lower(root.get("name")), "%"+filterUserDto.getName().toLowerCase()+"%"));
            }
 
             if(filterUserDto.getMinPrice()!=null){
@@ -32,7 +32,7 @@ public class ProductSpecificationUser {
 
            if(filterUserDto.getCategoryNames()!=null && !filterUserDto.getCategoryNames().isEmpty()){
 
-               List<String> categories = Arrays.asList(filterUserDto.getCategoryNames().split(","));
+               List<String> categories = Arrays.asList(filterUserDto.getCategoryNames().toLowerCase().split(","));
 
                Join<Product, Category> categoryJoin = root.join("categories");
 

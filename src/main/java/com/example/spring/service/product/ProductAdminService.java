@@ -78,7 +78,7 @@ public class ProductAdminService {
         product.setQuantity(productCreateDto.getQuantity());
 
         Set<Category> categories = productCreateDto.getCategoryNames().stream()
-                .map(categoryName -> categoryRepository.findByName(categoryName)
+                .map(categoryName -> categoryRepository.findByName(categoryName.toLowerCase())
                         .orElseThrow(() -> new NoSuchElementException("Category not found: " + categoryName)))
                 .collect(Collectors.toSet());
 
@@ -106,7 +106,7 @@ public class ProductAdminService {
 
         if(productUpdateDto.getCategoryNames()!=null && !productUpdateDto.getCategoryNames().isEmpty()){
             Set<Category> categories = productUpdateDto.getCategoryNames().stream()
-                    .map(category -> categoryRepository.findByName(category).orElseThrow(() -> new NoSuchElementException("Category not found: "+category)))
+                    .map(category -> categoryRepository.findByName(category.toLowerCase()).orElseThrow(() -> new NoSuchElementException("Category not found: "+category)))
                     .collect(Collectors.toSet());
             product.setCategories(categories);
         }

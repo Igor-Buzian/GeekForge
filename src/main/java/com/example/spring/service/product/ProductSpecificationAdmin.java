@@ -56,7 +56,7 @@ public class ProductSpecificationAdmin {
             // Фильтрация по категориям
             if (filterDto.getCategoryNames() != null && !filterDto.getCategoryNames().isEmpty()) {
                 // Используем .split(",") для получения массива имен категорий
-                List<String> categoryNameList = Arrays.asList(filterDto.getCategoryNames().split(","));
+                List<String> categoryNameList = Arrays.asList(filterDto.getCategoryNames().toLowerCase().split(","));
 
                 // Создаем JOIN с таблицей категорий
                 Join<Product, Category> categoryJoin = root.join("categories"); // 'categories' - это имя поля в Product

@@ -49,8 +49,7 @@ public class SecurityConfig {
                                 "/auth/v1/**"
                         ).permitAll()
                         .requestMatchers("/product/v1/admin/**").hasAuthority("ROLE_ADMIN")
-                        // ИЗМЕНИТЕ ЭТУ СТРОКУ:
-                        .requestMatchers("/category/v1/admin/**").hasAuthority("ROLE_ADMIN") // <-- ЗДЕСЬ ДОЛЖЕН БЫТЬ "/**"
+                        .requestMatchers("/category/v1/admin/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/admin/v1/**").hasAuthority("ROLE_ADMIN")
                         .anyRequest().authenticated()
                 )

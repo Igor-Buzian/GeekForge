@@ -25,14 +25,14 @@ public class CategoryService {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("Error","Category with name: "+categoryCreateDto.getName()+" is exist!"));
         //   return ResponseEntity.status(HttpStatus.SEE_OTHER).header("Location", "/category-form?error=categoryExist").build();
         Category category = new Category();//repositoryService.loadCategoryByName(categoryCreateDto.getName());
-        category.setName(categoryCreateDto.getName());
+        category.setName(categoryCreateDto.getName().toLowerCase());
         category.setSlug(categoryCreateDto.getName().trim().toLowerCase().replaceAll("\\s+", "-"));
 
         categoryRepository.save(category);
 
         CategoryResponseDto responseDto = new CategoryResponseDto();
         responseDto.setId((long) category.getId()); // Предполагаем, что ID CategoryResponseDto имеет тип Long
-        responseDto.setName(category.getName());
+        responseDto.setName(category.getName().toLowerCase());
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
       //  return ResponseEntity.status(HttpStatus.CREATED).header("Location", "/category-form").build();
     }
@@ -45,7 +45,7 @@ public class CategoryService {
 
         if(categoryRepository.existsByName(categoryResponseDto.getName())) return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("Error", "Category name "+categoryResponseDto.getName()+" is exist!"));
 
-        category.setName(categoryResponseDto.getName());
+        category.setName(categoryResponseDto.getName().toLowerCase());
         category.setSlug(categoryResponseDto.getName().trim().toLowerCase().replaceAll("\\s+", "-"));
 
         categoryRepository.save(category);
@@ -55,7 +55,7 @@ public class CategoryService {
     @Transactional
     public void deleteCategory(String name) {
 
-        Category category = repositoryService.loadCategoryByName(name);
+        Category category = repositoryService.loadCategoryByName(name.toLowerCase());
         categoryRepository.deleteById(Math.toIntExact(category.getId()));
     }
 
