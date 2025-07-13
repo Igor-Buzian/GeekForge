@@ -21,7 +21,7 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
 
 # Копируем собранный JAR-файл из стадии 'build'
-COPY --from=build /app/target/GeekForge-0.0.1-SNAPSHOT.jar spring-app.jar
+COPY --from=build /app/target/spring-0.0.1-SNAPSHOT.jar spring-app.jar
 
 # Открываем порт, который ваше Spring Boot приложение слушает (обычно 8080)
 EXPOSE 8080
