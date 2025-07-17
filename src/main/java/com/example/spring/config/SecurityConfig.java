@@ -42,6 +42,9 @@ public class SecurityConfig {
                 .cors(cors -> cors.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                "/",
+                                "/api/product/v1/getAllProducts",
+                                "/api/product/v1/getAllProducts**",
                                 "/login",
                                 "/login**",
                                 "/register",
