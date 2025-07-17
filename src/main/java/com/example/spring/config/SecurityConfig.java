@@ -49,7 +49,8 @@ public class SecurityConfig {
                                 "/login**",
                                 "/register",
                                 "/register**",
-                                "/auth/v1/**"
+                                "/auth/v1/**",
+                                "/error"
                         ).permitAll()
                         .requestMatchers("/product/v1/admin/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/category/v1/admin/**").hasAuthority("ROLE_ADMIN")
