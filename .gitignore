@@ -31,6 +31,4 @@ build/
 
 ### VS Code ###
 .vscode/
-src/main/java/com/example/spring/config/FirebaseConfig.java
 src/main/resources/geekforge-ae17a-b3a007330745.json
-src/main/resources/application.properties
